@@ -5,7 +5,7 @@
 - Phase 1 foundation is implemented and verified locally and against the development database.
 - Do not deploy to Render yet; deployment is deferred to its later phase.
 - Use the already-created Supabase project and its configured region.
-- The GitHub repository exists. GitHub Actions checks lint, types, and tests; its first run is pending.
+- The GitHub repository exists. Its first GitHub Actions run passed lint, types, and tests.
 - Docker image validation is deferred at the owner's request.
 - AI provider calls are not used by the Phase 1 app or tests.
 - `SENTRY_DSN=placeholder` disables Sentry. Configure a real DSN only after creating the Sentry project and following the separate setup guide.
