@@ -1,0 +1,31 @@
+@baseUrl = http://127.0.0.1:8000
+@adminKey = <set-a-private-local-key>
+@traceId = <trace-uuid>
+
+### Liveness
+GET {{baseUrl}}/api/v1/health
+
+### Readiness
+GET {{baseUrl}}/api/v1/ready
+
+### Find a trace and its spans
+GET {{baseUrl}}/admin/v1/traces/{{traceId}}
+Authorization: Bearer {{adminKey}}
+
+### Read recent audit records
+GET {{baseUrl}}/admin/v1/audit?limit=20
+Authorization: Bearer {{adminKey}}
+
+### Create a scoped API key (response contains the raw key once)
+POST {{baseUrl}}/admin/v1/api-keys
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "name": "local-test",
+  "scopes": ["admin:read"]
+}
+
+### Revoke an API key
+DELETE {{baseUrl}}/admin/v1/api-keys/<api-key-uuid>
+Authorization: Bearer {{adminKey}}

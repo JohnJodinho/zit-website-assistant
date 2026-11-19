@@ -1,0 +1,32 @@
+services:
+  api:
+    build: .
+    environment:
+      ENV: dev
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      DATABASE_URL_DIRECT: ${DATABASE_URL_DIRECT:-}
+      DATABASE_SSL_ROOT_CERT: ${DATABASE_SSL_ROOT_CERT:-}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-8}
+      SESSION_PEPPER: ${SESSION_PEPPER:-}
+      ADMIN_BOOTSTRAP_KEY_HASH: ${ADMIN_BOOTSTRAP_KEY_HASH:-}
+      ADMIN_DOCS_USERNAME: ${ADMIN_DOCS_USERNAME:-}
+      ADMIN_DOCS_PASSWORD: ${ADMIN_DOCS_PASSWORD:-}
+      WIDGET_ORIGINS: ${WIDGET_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      ADMIN_IP_ALLOWLIST: ${ADMIN_IP_ALLOWLIST:-}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      GIT_SHA: ${GIT_SHA:-local}
+      SENTRY_DSN: ${SENTRY_DSN:-placeholder}
+      PUBLIC_DOCS_ENABLED: "false"
+      OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"
+      interval: 30s
+      timeout: 3s
+      retries: 3

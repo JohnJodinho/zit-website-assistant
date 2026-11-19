@@ -1,0 +1,12 @@
+misc
+etl/
+scripts/
+.github/instructions/
+.vscode
+.env
+etl/data/cleaned/
+etl/data/chunks/
+etl/data/chroma_db/
+__pycache__/
+*.py[cod]
+venv
