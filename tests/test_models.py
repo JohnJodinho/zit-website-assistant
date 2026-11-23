@@ -13,6 +13,7 @@ def test_orm_metadata_covers_the_foundation_schema() -> None:
         "assistant.eval_runs",
         "assistant.ingestion_events",
         "assistant.ingestion_runs",
+        "assistant.idempotency_records",
         "assistant.links",
         "assistant.llm_calls",
         "assistant.release_chunks",

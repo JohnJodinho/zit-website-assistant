@@ -176,6 +176,9 @@ class Document(Base):
     source_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("assistant.sources.id")
     )
+    aliases: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, server_default=sql_text("'{}'")
+    )
     status: Mapped[str] = mapped_column(Text, nullable=False, server_default=sql_text("'active'"))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -386,6 +389,27 @@ class IngestionEvent(Base):
     at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class IdempotencyRecord(Base):
+    __tablename__ = "idempotency_records"
+    __table_args__ = (
+        Index("idempotency_records_expires_at_idx", "expires_at"),
+        {"schema": "assistant"},
+    )
+
+    key_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    actor_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("assistant.api_keys.id", ondelete="CASCADE")
+    )
+    method: Mapped[str] = mapped_column(Text, nullable=False)
+    route: Mapped[str] = mapped_column(Text, nullable=False)
+    request_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    response: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class EvaluationCase(Base):

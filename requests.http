@@ -1,6 +1,10 @@
 @baseUrl = http://127.0.0.1:8000
 @adminKey = <set-a-private-local-key>
 @traceId = <trace-uuid>
+@runId = <run-uuid>
+@releaseId = <release-id>
+@stageIdempotencyKey = <unique-idempotency-key>
+@evaluateIdempotencyKey = <unique-idempotency-key>
 
 ### Liveness
 GET {{baseUrl}}/api/v1/health
@@ -28,4 +32,50 @@ Content-Type: application/json
 
 ### Revoke an API key
 DELETE {{baseUrl}}/admin/v1/api-keys/<api-key-uuid>
+Authorization: Bearer {{adminKey}}
+
+### Read-only ETL preview
+POST {{baseUrl}}/admin/v1/etl/runs?source=crawl_md&mode=dry_run
+Authorization: Bearer {{adminKey}}
+Content-Type: application/zip
+
+< ./path/to/approved-crawl-bundle.zip
+
+### Stage into the development draft
+# Requires explicit owner approval. The ZIP must contain the approved crawl and both website JSON files.
+POST {{baseUrl}}/admin/v1/etl/runs?source=crawl_md&mode=stage
+Authorization: Bearer {{adminKey}}
+Idempotency-Key: {{stageIdempotencyKey}}
+Content-Type: application/zip
+
+< ./path/to/approved-crawl-bundle.zip
+
+### List and inspect ETL runs
+GET {{baseUrl}}/admin/v1/etl/runs?limit=50
+Authorization: Bearer {{adminKey}}
+
+GET {{baseUrl}}/admin/v1/etl/runs/{{runId}}
+Authorization: Bearer {{adminKey}}
+
+### List releases and inspect the current draft
+GET {{baseUrl}}/admin/v1/releases
+Authorization: Bearer {{adminKey}}
+
+GET {{baseUrl}}/admin/v1/releases/current-draft
+Authorization: Bearer {{adminKey}}
+
+### Compare and evaluate a release
+GET {{baseUrl}}/admin/v1/releases/{{releaseId}}/diff
+Authorization: Bearer {{adminKey}}
+
+POST {{baseUrl}}/admin/v1/releases/{{releaseId}}/evaluate
+Authorization: Bearer {{adminKey}}
+Idempotency-Key: {{evaluateIdempotencyKey}}
+
+### Reload the active published snapshot after an approved publish
+POST {{baseUrl}}/admin/v1/snapshot/reload
+Authorization: Bearer {{adminKey}}
+
+### Publish is intentionally blocked until Phase 3 search evaluation is available
+POST {{baseUrl}}/admin/v1/releases/{{releaseId}}/publish
 Authorization: Bearer {{adminKey}}

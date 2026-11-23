@@ -19,12 +19,25 @@ class Settings(BaseSettings):
 
     env: Literal["dev", "staging", "prod"] = "dev"
     database_url: SecretStr | None = None
+    database_url_session: SecretStr | None = None
     database_url_direct: SecretStr | None = None
     database_ssl_root_cert: Path | None = None
+    zit_api_key: SecretStr | None = None
+    embedding_api_base_url: str = "https://johnalbarkaibrahim-sentimentscope.hf.space"
+    embedding_model: Literal["bge-base-768-v1"] = "bge-base-768-v1"
+    embedding_dimensions: int = 768
+    embedding_timeout_seconds: float = 100.0
     db_pool_size: int = 8
     writer_queue_max: int = 5000
     writer_batch_rows: int = 100
     writer_flush_seconds: float = 1.0
+    etl_max_json_mb: int = 5
+    etl_max_zip_mb: int = 20
+    etl_max_zip_files: int = 500
+    etl_max_removal_percent: int = 15
+    etl_max_count_swing_percent: int = 50
+    etl_missing_section_fail_percent: int = 10
+    chunk_hard_max_tokens: int = 350
     session_pepper: SecretStr | None = None
     admin_bootstrap_key_hash: SecretStr | None = None
     admin_docs_username: SecretStr | None = None
@@ -43,6 +56,7 @@ class Settings(BaseSettings):
         self._validate_production_settings()
         self._validate_resource_settings()
         self._validate_admin_docs_settings()
+        self._validate_embedding_settings()
         self._validate_origins()
         self._validate_ip_allowlist()
         return self
@@ -62,6 +76,19 @@ class Settings(BaseSettings):
             raise ValueError("WRITER_QUEUE_MAX and WRITER_BATCH_ROWS must be positive")
         if self.writer_flush_seconds <= 0:
             raise ValueError("WRITER_FLUSH_SECONDS must be positive")
+        if min(self.etl_max_json_mb, self.etl_max_zip_mb, self.etl_max_zip_files) < 1:
+            raise ValueError("ETL upload limits must be positive")
+        if any(
+            not 0 <= value <= 100
+            for value in (
+                self.etl_max_removal_percent,
+                self.etl_max_count_swing_percent,
+                self.etl_missing_section_fail_percent,
+            )
+        ):
+            raise ValueError("ETL percentage limits must be between 0 and 100")
+        if self.chunk_hard_max_tokens < 1:
+            raise ValueError("CHUNK_HARD_MAX_TOKENS must be positive")
         if self.trusted_proxy_hops < 0:
             raise ValueError("TRUSTED_PROXY_HOPS cannot be negative")
 
@@ -75,6 +102,22 @@ class Settings(BaseSettings):
                 "ADMIN_DOCS_USERNAME and ADMIN_DOCS_PASSWORD are required when "
                 "PUBLIC_DOCS_ENABLED is true"
             )
+
+    def _validate_embedding_settings(self) -> None:
+        parts = urlsplit(self.embedding_api_base_url)
+        if self.embedding_dimensions != 768:
+            raise ValueError("EMBEDDING_DIMENSIONS must be 768")
+        dev_local_http = (
+            self.env == "dev" and parts.scheme == "http" and self._is_local_origin(parts.hostname)
+        )
+        if parts.scheme != "https" and not dev_local_http:
+            raise ValueError("EMBEDDING_API_BASE_URL must use HTTPS")
+        if not parts.netloc or parts.username or parts.password:
+            raise ValueError("EMBEDDING_API_BASE_URL must be an origin without credentials")
+        if parts.path not in {"", "/"} or parts.query or parts.fragment:
+            raise ValueError("EMBEDDING_API_BASE_URL must not include a path or query")
+        if self.embedding_timeout_seconds <= 0:
+            raise ValueError("EMBEDDING_TIMEOUT_SECONDS must be positive")
 
     @property
     def allowed_widget_origins(self) -> tuple[str, ...]:

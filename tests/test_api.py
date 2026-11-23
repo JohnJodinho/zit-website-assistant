@@ -87,3 +87,32 @@ def test_validation_error_does_not_echo_submitted_values() -> None:
     assert response.status_code == 422
     assert "private-value" not in response.text
     assert response.json()["error"]["code"] == "validation_error"
+
+
+def test_phase_two_routes_are_registered_without_public_chat() -> None:
+    with TestClient(create_app(Settings(_env_file=None))) as client:
+        for path in (
+            "/admin/v1/etl/runs",
+            "/admin/v1/documents",
+            "/admin/v1/chunks",
+            "/admin/v1/links",
+            "/admin/v1/faqs",
+            "/admin/v1/releases",
+        ):
+            assert client.get(path).status_code == 503
+        assert client.get("/api/v1/chat").status_code == 404
+
+
+def test_publish_stays_blocked_until_search_evaluation_exists() -> None:
+    app = create_app(Settings(_env_file=None))
+    app.dependency_overrides[get_admin_principal] = lambda: AdminPrincipal(
+        UUID(int=1),
+        "test",
+        frozenset({AdminScope.PUBLISH.value}),
+    )
+
+    with TestClient(app) as client:
+        response = client.post("/admin/v1/releases/1/publish")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "search_evaluation_unavailable"

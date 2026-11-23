@@ -12,7 +12,7 @@ from app.obs.logging import get_logger
 from app.obs.writer import TelemetryWriter
 
 router = APIRouter(prefix="/api/v1", tags=["health"])
-_MIGRATION_HEAD = "0001_foundation"
+_MIGRATION_HEAD = "0002_phase2_content"
 
 
 @router.get("/health")
@@ -24,10 +24,18 @@ async def health() -> dict[str, str]:
 async def readiness(request: Request) -> JSONResponse:
     database_ready, migration_ready = await _database_readiness(request.app.state.engine)
     writer: TelemetryWriter | None = request.app.state.telemetry_writer
-    ready = database_ready and migration_ready
+    snapshot = getattr(request.app.state, "active_snapshot", None)
+    snapshot_error = getattr(request.app.state, "snapshot_error", None)
+    ready = database_ready and migration_ready and snapshot_error is None
     return JSONResponse(
         status_code=200 if ready else 503,
-        content=_readiness_body(database_ready, migration_ready, writer),
+        content=_readiness_body(
+            database_ready,
+            migration_ready,
+            writer,
+            snapshot,
+            snapshot_error,
+        ),
     )
 
 
@@ -62,8 +70,10 @@ def _readiness_body(
     database_ready: bool,
     migration_ready: bool,
     writer: TelemetryWriter | None,
+    snapshot: object | None,
+    snapshot_error: str | None,
 ) -> dict[str, Any]:
-    ready = database_ready and migration_ready
+    ready = database_ready and migration_ready and snapshot_error is None
     return {
         "status": "ready" if ready else "not_ready",
         "database": "ready" if database_ready else "unavailable",
@@ -74,5 +84,6 @@ def _readiness_body(
             "dropped_traces": writer.dropped_traces if writer else 0,
             "dropped_errors": writer.dropped_errors if writer else 0,
         },
-        "release": "not_loaded",
+        "release": "loaded" if snapshot is not None else "not_loaded",
+        "snapshot_error": snapshot_error,
     }

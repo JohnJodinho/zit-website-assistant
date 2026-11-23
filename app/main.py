@@ -6,9 +6,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.admin.content_routes import router as content_router
 from app.api.admin.docs import register_admin_docs
+from app.api.admin.etl_routes import router as etl_router
+from app.api.admin.faq_routes import router as faq_router
+from app.api.admin.link_routes import router as link_router
+from app.api.admin.release_routes import router as release_router
 from app.api.admin.routes import router as admin_router
 from app.api.errors import (
     handle_http_error,
@@ -18,9 +24,10 @@ from app.api.errors import (
 from app.api.middleware import request_context_middleware
 from app.api.public.health import router as health_router
 from app.config import Settings, get_settings
+from app.content.snapshot import load_active_snapshot
 from app.db.session import create_database_engine, create_session_factory
 from app.obs.instrumentation import instrument_application
-from app.obs.logging import configure_logging
+from app.obs.logging import configure_logging, get_logger
 from app.obs.sentry import initialize_sentry
 from app.obs.writer import TelemetryWriter
 
@@ -44,11 +51,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
+        if session_factory is not None:
+            try:
+                async with session_factory() as session:
+                    application.state.active_snapshot = await load_active_snapshot(
+                        session,
+                        app_settings,
+                    )
+            except ValueError as exc:
+                application.state.snapshot_error = "release_validation_failed"
+                get_logger("content.snapshot", app_settings).error(
+                    "active_release_validation_failed",
+                    error_type=type(exc).__name__,
+                )
+            except SQLAlchemyError as exc:
+                application.state.snapshot_error = "database_unavailable"
+                get_logger("content.snapshot", app_settings).warning(
+                    "active_release_load_failed",
+                    error_type=type(exc).__name__,
+                )
         if writer is not None:
             writer.start()
         try:
             yield
         finally:
+            embedding_client = getattr(application.state, "embedding_client", None)
+            if embedding_client is not None:
+                await embedding_client.close()
             if writer is not None:
                 await writer.close(timeout=10)
             if engine is not None:
@@ -66,6 +95,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.engine = engine
     application.state.session_factory = session_factory
     application.state.telemetry_writer = writer
+    application.state.embedding_client = None
+    application.state.active_snapshot = None
+    application.state.snapshot_error = None
     application.middleware("http")(request_context_middleware(app_settings))
     application.add_middleware(
         CORSMiddleware,
@@ -80,6 +112,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(Exception, handle_unexpected_error)
     application.include_router(health_router)
     application.include_router(admin_router)
+    application.include_router(content_router)
+    application.include_router(etl_router)
+    application.include_router(faq_router)
+    application.include_router(link_router)
+    application.include_router(release_router)
     register_admin_docs(application, app_settings)
     instrument_application(application, engine, app_settings)
     return application

@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import ApiKey
 from app.db.session import get_db_session
+from app.embeddings.client import BgeEmbeddingClient
 from app.security.keys import AdminPrincipal, AdminScope, hash_admin_key
 
 
@@ -69,3 +70,14 @@ def require_scope(
         return principal
 
     return dependency
+
+
+def get_embedding_client(request: Request) -> BgeEmbeddingClient:
+    settings = request.app.state.settings
+    if settings.zit_api_key is None:
+        raise HTTPException(status_code=503, detail="embedding_provider_not_configured")
+    client = getattr(request.app.state, "embedding_client", None)
+    if client is None:
+        client = BgeEmbeddingClient(settings)
+        request.app.state.embedding_client = client
+    return client
