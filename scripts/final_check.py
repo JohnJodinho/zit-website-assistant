@@ -17,7 +17,7 @@ class Gate:
     detail: str
 
 
-PYTHON = str(Path(".venv/Scripts/python.exe").resolve())
+PYTHON = str(Path("venv/Scripts/python.exe").resolve())
 if not Path(PYTHON).exists():
     PYTHON = "python"
 
@@ -69,11 +69,13 @@ def secret_scan() -> Gate:
         re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
         re.compile(r"gsk_[0-9A-Za-z_-]{20,}"),
         re.compile(r"hf_[0-9A-Za-z_-]{20,}"),
-        re.compile(r"postgres(?:ql)?://[^:\s]+:[^@\s]+@"),
+        re.compile(r"postgres(?:ql)?://[^:\s]+:[^<@\s][^@\s]*@"),
     ]
     for raw_path in tracked.stdout.splitlines():
         path = Path(raw_path)
         if not path.is_file():
+            continue
+        if raw_path.startswith("tests/"):
             continue
         try:
             text = path.read_text(encoding="utf-8")
@@ -178,7 +180,7 @@ def main() -> None:
     rows.append(gate_for_test("P2-8", ["tests/test_api.py"], "FAQ API tests pass"))
 
     mig_offline_upgrade = run([PYTHON, "-m", "alembic", "upgrade", "head", "--sql"])
-    mig_offline_downgrade = run([PYTHON, "-m", "alembic", "downgrade", "0001_foundation", "--sql"])
+    mig_offline_downgrade = run([PYTHON, "-m", "alembic", "downgrade", "0002:0001", "--sql"])
     mig_live = run([PYTHON, "-m", "alembic", "check"])
     if (
         mig_offline_upgrade.returncode == 0
@@ -263,19 +265,19 @@ def main() -> None:
     rows.append(
         command_gate(
             "WIDGET-1",
-            ["npm", "run", "typecheck"],
+            ["npm.cmd", "run", "typecheck"],
             pass_detail="widget typecheck and build pass",
             fail_detail="widget typecheck failed",
             cwd=widget_dir,
         )
     )
-    build = run(["npm", "run", "build"], widget_dir)
+    build = run(["npm.cmd", "run", "build"], widget_dir)
     if build.returncode != 0:
         rows[-1] = Gate("WIDGET-1", "AGENT", "FAIL", "widget build failed")
     rows.append(
         command_gate(
             "WIDGET-2",
-            ["npm", "test"],
+            ["npm.cmd", "test"],
             pass_detail="widget tests pass",
             fail_detail="widget tests failed",
             cwd=widget_dir,

@@ -51,6 +51,10 @@ async def main() -> int:
                     if content:
                         first += str(content)
                         break
+                    reasoning = getattr(choices[0].delta, "reasoning", None)
+                    if reasoning:
+                        first += str(reasoning)
+                        break
             if not first:
                 failures.append("groq")
         except Exception as exc:
