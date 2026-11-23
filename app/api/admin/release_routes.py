@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+import hashlib
+import json
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Annotated
 
@@ -10,7 +12,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.deps import get_embedding_client, require_scope
-from app.content.idempotency import execute_idempotently
+from app.config import Settings
+from app.content.idempotency import (
+    execute_idempotently,
+    execute_idempotently_outside_transaction,
+)
 from app.content.repository import (
     active_release_id,
     add_audit_record,
@@ -26,6 +32,7 @@ from app.content.snapshot import (
 )
 from app.db.models import Chunk, EvaluationCase, Link, Release, ReleaseChunk, ReleaseLink, Setting
 from app.db.session import get_db_session
+from app.embeddings.client import BgeEmbeddingClient
 from app.search.evaluation import Evaluator
 from app.security.keys import AdminPrincipal, AdminScope
 
@@ -104,21 +111,13 @@ async def evaluate_release(
             raise HTTPException(status_code=404, detail="release_not_found")
         chunks, links = await _release_records(session, release_id)
         check = validate_release_content(chunks, links, settings)
-        query_vectors: dict[str, tuple[float, ...]] = {}
+        content_hash = _release_content_hash(chunks, links)
         search_report: dict[str, object] = {"available": False, "reason": "no_eval_cases"}
         if check.valid:
             cases = (
                 await session.scalars(select(EvaluationCase).where(EvaluationCase.active.is_(True)))
             ).all()
             if cases:
-                vectors = await embedding_client.embed_texts(
-                    [case.question for case in cases],
-                    input_type="query",
-                )
-                query_vectors = {
-                    case.question: tuple(vector)
-                    for case, vector in zip(cases, vectors, strict=True)
-                }
                 snapshot = await load_release_snapshot_for_evaluation(
                     session,
                     release_id,
@@ -126,32 +125,26 @@ async def evaluate_release(
                     chunks,
                     links,
                 )
-                evaluation_report = await Evaluator().evaluate(
+                search_report = await _evaluate_search_cases(
                     session,
+                    cases,
                     snapshot,
-                    query_vectors,
-                    retrieval_min_hit=settings.gate_retrieval_min_hit,
-                    link_min_hit=0.95,
-                    off_topic_min_refusal=0.95,
-                    wrong_refusal_max=0.05,
-                    vector_min=settings.gate_vector_min,
-                    bm25_min=settings.gate_bm25_min,
+                    embedding_client,
+                    settings,
                 )
-                search_report = {
-                    "available": True,
-                    "valid": evaluation_report.valid,
-                    "retrieval_hit_rate": evaluation_report.retrieval_hit_rate,
-                    "link_hit_rate": evaluation_report.link_hit_rate,
-                    "off_topic_refusal_rate": evaluation_report.off_topic_refusal_rate,
-                    "wrong_refusal_rate": evaluation_report.wrong_refusal_rate,
-                    "details": evaluation_report.details,
-                }
+                current_chunks, current_links = await _release_records(session, release_id)
+                if _release_content_hash(current_chunks, current_links) != content_hash:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="release_changed_during_evaluation",
+                    )
         report: dict[str, object] = {
             "data_check": {
                 "valid": check.valid,
                 "errors": list(check.errors),
                 "warnings": list(check.warnings),
             },
+            "content_hash": content_hash,
             "search_tests": search_report,
             "publishable": check.valid and bool(search_report.get("valid", False)),
             "evaluated_at": datetime.now(UTC).isoformat(),
@@ -166,15 +159,59 @@ async def evaluate_release(
             after=report,
             trace_id=request.state.trace_id,
         )
+        await session.commit()
         return report
 
-    return await execute_idempotently(
+    return await execute_idempotently_outside_transaction(
         session,
         request,
         principal,
         {"release_id": release_id, "action": "evaluate"},
         mutation,
     )
+
+
+async def _evaluate_search_cases(
+    session: AsyncSession,
+    cases: Sequence[EvaluationCase],
+    snapshot: ContentSnapshot,
+    embedding_client: BgeEmbeddingClient,
+    settings: Settings,
+) -> dict[str, object]:
+    missing = [case for case in cases if case.embedding is None or len(case.embedding) != 768]
+    await session.commit()
+    if missing:
+        vectors = await embedding_client.embed_texts(
+            [case.question for case in missing],
+            input_type="query",
+        )
+        for case, vector in zip(missing, vectors, strict=True):
+            case.embedding = vector
+    if any(case.embedding is None for case in cases):
+        raise RuntimeError("Evaluation query embeddings are incomplete")
+    query_vectors = {
+        case.question: tuple(float(value) for value in case.embedding or ()) for case in cases
+    }
+    evaluation_report = await Evaluator().evaluate(
+        session,
+        snapshot,
+        query_vectors,
+        retrieval_min_hit=settings.gate_retrieval_min_hit,
+        link_min_hit=0.95,
+        off_topic_min_refusal=0.95,
+        wrong_refusal_max=0.05,
+        vector_min=settings.gate_vector_min,
+        bm25_min=settings.gate_bm25_min,
+    )
+    return {
+        "available": True,
+        "valid": evaluation_report.valid,
+        "retrieval_hit_rate": evaluation_report.retrieval_hit_rate,
+        "link_hit_rate": evaluation_report.link_hit_rate,
+        "off_topic_refusal_rate": evaluation_report.off_topic_refusal_rate,
+        "wrong_refusal_rate": evaluation_report.wrong_refusal_rate,
+        "details": evaluation_report.details,
+    }
 
 
 @router.post("/releases/{release_id}/publish")
@@ -195,6 +232,9 @@ async def publish_release(
         report = release.eval_report
         if not isinstance(report, dict) or report.get("publishable") is not True:
             raise HTTPException(status_code=409, detail="release_evaluation_required")
+        chunks, links = await _release_records(session, release_id)
+        if report.get("content_hash") != _release_content_hash(chunks, links):
+            raise HTTPException(status_code=409, detail="release_changed_after_evaluation")
 
         previous_id = await active_release_id(session)
         now = datetime.now(UTC)
@@ -388,6 +428,23 @@ async def _release_records(
         )
     ).all()
     return list(chunks), list(links)
+
+
+def _release_content_hash(chunks: list[Chunk], links: list[Link]) -> str:
+    content = {
+        "chunks": sorted(
+            (
+                chunk.chunk_key,
+                chunk.content_hash,
+                chunk.embedding_model,
+                chunk.metadata_json,
+            )
+            for chunk in chunks
+        ),
+        "links": sorted((link.link_key, link.label, link.url, link.active) for link in links),
+    }
+    encoded = json.dumps(content, ensure_ascii=False, sort_keys=True, default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 async def load_release_snapshot_for_evaluation(

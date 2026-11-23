@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -20,23 +20,20 @@ from app.content.models import CrawlImport
 from app.content.repository import (
     active_release_id,
     add_audit_record,
-    add_chunk_version,
-    add_link_version,
-    attach_chunk,
     ensure_draft,
     release_chunks,
     release_links,
-    remove_chunk_from_release,
-    remove_link_from_release,
-    save_document,
     save_source,
 )
 from app.db.models import (
     Chunk,
+    Document,
     IngestionEvent,
     IngestionRun,
+    Link,
     Release,
     ReleaseChunk,
+    ReleaseLink,
     Source,
     Suppression,
 )
@@ -231,46 +228,16 @@ async def _commit_stage(
         run_record = await session.get(IngestionRun, run.id)
         if run_record is None:
             raise RuntimeError("Ingestion run record disappeared")
-        for document in crawl.documents:
-            await save_document(session, document, source.id, origin="etl")
-
-        links_before = await release_links(session, draft.id)
-        for candidate_link in crawl.links:
-            previous = links_before.get(candidate_link.link_key)
-            if previous is not None and (
-                previous.url,
-                previous.label,
-            ) == (candidate_link.url, candidate_link.label):
-                continue
-            await add_link_version(
-                session,
-                candidate_link,
-                actor=actor,
-                origin="etl",
-                release_id=draft.id,
-            )
-        incoming_link_keys = {item.link_key for item in crawl.links}
-        for key, previous_link in links_before.items():
-            if previous_link.origin == "etl" and key not in incoming_link_keys:
-                await remove_link_from_release(session, draft.id, key)
-
-        for key in diff.removed:
-            await remove_chunk_from_release(session, draft.id, key)
-        draft_chunks = await release_chunks(session, draft.id)
-        for candidate in (*diff.added, *diff.changed):
-            current_chunk = draft_chunks.get(candidate.chunk_key)
-            chunk = await add_chunk_version(
-                session,
-                candidate,
-                actor=actor,
-                origin="etl",
-                embedding=vectors[candidate.chunk_key],
-                embedding_model=BGE_MODEL_ID,
-                overrides_id=current_chunk.id if current_chunk else None,
-                trace_id=trace_id,
-            )
-            await attach_chunk(session, draft.id, chunk)
-            draft_chunks[candidate.chunk_key] = chunk
+        await _save_crawl_documents(session, crawl, source.id)
+        await _stage_crawl_links(session, draft.id, crawl, actor)
+        await _stage_crawl_chunks(
+            session,
+            draft.id,
+            diff,
+            vectors,
+            actor=actor,
+            trace_id=trace_id,
+        )
 
         stats = _stats(crawl, diff, force)
         run_record.status = "succeeded"
@@ -315,6 +282,159 @@ async def _commit_stage(
             "release_id": draft.id,
             **stats,
         }
+
+
+async def _save_crawl_documents(
+    session: AsyncSession,
+    crawl: CrawlImport,
+    source_id: UUID,
+) -> None:
+    doc_keys = [document.doc_key for document in crawl.documents]
+    existing = (await session.scalars(select(Document).where(Document.doc_key.in_(doc_keys)))).all()
+    existing_by_key = {document.doc_key: document for document in existing}
+    for source_document in crawl.documents:
+        document = existing_by_key.get(source_document.doc_key)
+        if document is None:
+            session.add(
+                Document(
+                    doc_key=source_document.doc_key,
+                    doc_type=source_document.doc_type,
+                    title=source_document.title,
+                    url_path=source_document.url_path,
+                    origin="etl",
+                    source_id=source_id,
+                    aliases=[],
+                    status="active",
+                )
+            )
+        elif document.origin != "manual":
+            document.doc_type = source_document.doc_type
+            document.title = source_document.title
+            document.url_path = source_document.url_path
+            document.source_id = source_id
+            document.status = "active"
+
+
+async def _stage_crawl_links(
+    session: AsyncSession,
+    release_id: int,
+    crawl: CrawlImport,
+    actor: str,
+) -> None:
+    links_before = await release_links(session, release_id)
+    incoming = {item.link_key: item for item in crawl.links}
+    links_to_add = [
+        candidate
+        for key, candidate in incoming.items()
+        if (previous := links_before.get(key)) is None
+        or (previous.url, previous.label) != (candidate.url, candidate.label)
+    ]
+    removed_keys = {
+        key
+        for key, previous in links_before.items()
+        if previous.origin == "etl" and key not in incoming
+    }
+    replaced_keys = {link.link_key for link in links_to_add} | removed_keys
+    if replaced_keys:
+        await session.execute(
+            delete(ReleaseLink)
+            .where(ReleaseLink.release_id == release_id)
+            .where(ReleaseLink.link_id.in_(select(Link.id).where(Link.link_key.in_(replaced_keys))))
+        )
+    if not links_to_add:
+        return
+
+    link_versions = await session.execute(
+        select(Link.link_key, func.max(Link.version))
+        .where(Link.link_key.in_([link.link_key for link in links_to_add]))
+        .group_by(Link.link_key)
+    )
+    max_versions: dict[str, int] = dict(link_versions.tuples().all())
+    links = [
+        Link(
+            id=uuid4(),
+            link_key=candidate.link_key,
+            version=(max_versions.get(candidate.link_key) or 0) + 1,
+            kind=candidate.kind,
+            label=candidate.label,
+            url=candidate.url,
+            description="",
+            aliases=[],
+            doc_key=None,
+            priority=50,
+            active=True,
+            origin="etl",
+            created_by=actor,
+        )
+        for candidate in links_to_add
+    ]
+    session.add_all(links)
+    await session.flush()
+    session.add_all(ReleaseLink(release_id=release_id, link_id=link.id) for link in links)
+
+
+async def _stage_crawl_chunks(
+    session: AsyncSession,
+    release_id: int,
+    diff: ContentDiff,
+    vectors: Mapping[str, list[float]],
+    *,
+    actor: str,
+    trace_id: UUID,
+) -> None:
+    candidates = (*diff.added, *diff.changed)
+    replacement_keys = {key for key in diff.removed}
+    replacement_keys.update(candidate.chunk_key for candidate in candidates)
+    if replacement_keys:
+        await session.execute(
+            delete(ReleaseChunk)
+            .where(ReleaseChunk.release_id == release_id)
+            .where(
+                ReleaseChunk.chunk_id.in_(
+                    select(Chunk.id).where(Chunk.chunk_key.in_(replacement_keys))
+                )
+            )
+        )
+    if not candidates:
+        return
+
+    draft_chunks = await release_chunks(session, release_id)
+    chunk_versions = await session.execute(
+        select(Chunk.chunk_key, func.max(Chunk.version))
+        .where(Chunk.chunk_key.in_([chunk.chunk_key for chunk in candidates]))
+        .group_by(Chunk.chunk_key)
+    )
+    max_versions: dict[str, int] = dict(chunk_versions.tuples().all())
+    chunks = [
+        Chunk(
+            id=uuid4(),
+            chunk_key=candidate.chunk_key,
+            doc_key=candidate.doc_key,
+            version=(max_versions.get(candidate.chunk_key) or 0) + 1,
+            kind=candidate.kind,
+            origin="etl",
+            overrides_id=(
+                draft_chunks[candidate.chunk_key].id
+                if candidate.chunk_key in draft_chunks
+                else None
+            ),
+            text=candidate.text,
+            embed_text=candidate.embed_text,
+            token_count=candidate.token_count,
+            metadata_json=candidate.metadata,
+            content_hash=candidate.content_hash,
+            embedding=vectors[candidate.chunk_key],
+            embedding_model=BGE_MODEL_ID,
+            created_by=actor,
+            created_via="etl",
+            change_note=None,
+            trace_id=trace_id,
+        )
+        for candidate in candidates
+    ]
+    session.add_all(chunks)
+    await session.flush()
+    session.add_all(ReleaseChunk(release_id=release_id, chunk_id=chunk.id) for chunk in chunks)
 
 
 def _validate_import(crawl: CrawlImport, settings: Settings, safety: DiffSafety) -> None:

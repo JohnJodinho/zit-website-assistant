@@ -51,6 +51,10 @@ def _response(request: httpx.Request, payload: object, status_code: int = 200) -
 
 async def test_client_discovers_service_limits_and_splits_batches() -> None:
     requests: list[tuple[str, dict[str, object] | None]] = []
+    sleeps: list[float] = []
+
+    async def no_wait(seconds: float) -> None:
+        sleeps.append(seconds)
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/health/ready":
@@ -75,7 +79,7 @@ async def test_client_discovers_service_limits_and_splits_batches() -> None:
 
     transport = httpx.MockTransport(handler)
     async with httpx.AsyncClient(transport=transport) as http_client:
-        client = BgeEmbeddingClient(_settings(), client=http_client)
+        client = BgeEmbeddingClient(_settings(), client=http_client, sleep=no_wait)
         vectors = await client.embed_texts(
             ["first passage", "second passage", "third passage"],
             input_type="document",
@@ -85,6 +89,7 @@ async def test_client_discovers_service_limits_and_splits_batches() -> None:
     assert all(len(vector) == BGE_DIMENSIONS for vector in vectors)
     assert [len(request[1]["input"]) for request in requests if request[1] is not None] == [2, 1]
     assert all(request[0] == "document" for request in requests)
+    assert sleeps == [pytest.approx(2.1)]
 
 
 async def test_client_uses_query_input_type_and_rejects_bad_vectors() -> None:
@@ -167,7 +172,7 @@ async def test_client_retries_transient_service_errors_with_retry_after() -> Non
 
     assert len(vectors) == 1
     assert attempts == 2
-    assert sleeps == [0.0]
+    assert sleeps == [0.0, pytest.approx(2.1)]
 
 
 async def test_authentication_error_does_not_expose_key_or_retry() -> None:

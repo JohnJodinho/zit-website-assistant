@@ -11,14 +11,33 @@ _STOPWORDS = {
     "a",
     "an",
     "and",
+    "are",
+    "be",
+    "can",
+    "do",
+    "does",
     "for",
+    "how",
+    "i",
     "in",
     "is",
+    "it",
+    "me",
+    "much",
     "of",
     "on",
+    "please",
     "the",
     "to",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
     "with",
+    "you",
+    "your",
 }
 _TOKEN = re.compile(r"[a-z0-9]+")
 
@@ -39,12 +58,12 @@ class InMemoryHybridSearch:
         self._documents = [chunk for chunk in snapshot.chunks]
         self._doc_freq: Counter[str] = Counter()
         self._doc_lengths: dict[str, int] = {}
-        self._term_sets: dict[str, set[str]] = {}
+        self._term_counts: dict[str, Counter[str]] = {}
         for chunk in self._documents:
-            terms = _tokens(f"{chunk.embed_text or ''} {chunk.text} {chunk.doc_key}")
-            self._term_sets[chunk.chunk_key] = set(terms)
-            self._doc_lengths[chunk.chunk_key] = len(terms)
-            self._doc_freq.update(set(terms))
+            term_counts = Counter(_tokens(f"{chunk.embed_text or ''} {chunk.text} {chunk.doc_key}"))
+            self._term_counts[chunk.chunk_key] = term_counts
+            self._doc_lengths[chunk.chunk_key] = sum(term_counts.values())
+            self._doc_freq.update(term_counts.keys())
         self.average_length = (
             sum(self._doc_lengths.values()) / len(self._doc_lengths) if self._doc_lengths else 1.0
         )
@@ -62,12 +81,12 @@ class InMemoryHybridSearch:
         vector_scores = self._vector_scores(query_vector)
         bm25_scores = self._bm25_scores(question)
         vector_ranked = sorted(
-            vector_scores,
+            (key for key, score in vector_scores.items() if score > 0),
             key=lambda key: vector_scores[key],
             reverse=True,
         )[:vector_top]
         bm25_ranked = sorted(
-            bm25_scores,
+            (key for key, score in bm25_scores.items() if score > 0),
             key=lambda key: bm25_scores[key],
             reverse=True,
         )[:bm25_top]
@@ -121,11 +140,22 @@ class InMemoryHybridSearch:
         query_counts = Counter(query_terms)
         scores: dict[str, float] = {}
         total_docs = len(self._documents) or 1
+        query_weight = sum(
+            frequency
+            * (
+                math.log(
+                    1.0
+                    + (total_docs - self._doc_freq.get(term, 0) + 0.5)
+                    / (self._doc_freq.get(term, 0) + 0.5)
+                )
+            )
+            * 2.2
+            for term, frequency in query_counts.items()
+        )
         for chunk in self._documents:
             score = 0.0
-            document_terms = _tokens(f"{chunk.embed_text or ''} {chunk.text} {chunk.doc_key}")
-            term_counts = Counter(document_terms)
-            length = len(document_terms)
+            term_counts = self._term_counts[chunk.chunk_key]
+            length = self._doc_lengths[chunk.chunk_key]
             for term, query_frequency in query_counts.items():
                 document_frequency = self._doc_freq.get(term, 0)
                 if document_frequency == 0:
@@ -142,7 +172,7 @@ class InMemoryHybridSearch:
                     / (frequency + 1.2 * (0.25 + 0.75 * length / self.average_length))
                 )
                 score += query_frequency * inverse_document_frequency * normalized_frequency
-            scores[chunk.chunk_key] = score
+            scores[chunk.chunk_key] = score / query_weight if query_weight else 0.0
         return scores
 
 

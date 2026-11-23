@@ -25,6 +25,21 @@ INTENT_PATTERNS = {
         re.I,
     ),
     "compare": re.compile(r"\b(compare|difference|versus|vs)\b", re.I),
+    "injection": re.compile(
+        r"\b(ignore|disregard|override)\b.{0,50}\b(instructions?|system prompt|safety|filters?|"
+        r"retrieved context|website facts)\b"
+        r"|\b(reveal|expose|return|output|show|tell)\b.{0,40}\b(password|api key|secret|"
+        r"system prompt|instructions?)\b"
+        r"|\b(pretend|act as)\b.{0,40}\b(bot|assistant|billing bot)\b"
+        r"|\b(add|invent|make up|fabricate)\b.{0,60}\b(fake|discount|tuition|deadline|"
+        r"phone number|course)\b"
+        r"|\b(use only)\b.{0,40}\b(personal knowledge)\b"
+        r"|\b(repeat)\b.{0,40}\b(previous assistant message)\b"
+        r"|\b(say|claim)\b.{0,60}\b(course|fact|discount)\b.{0,40}\b(not listed|not offered|fake)\b"
+        r"|\b(call a tool|delete (the )?published content|change the active release|"
+        r"disable (all )?filters|steal\w* user data|raw html|scripts?)\b",
+        re.I,
+    ),
 }
 
 

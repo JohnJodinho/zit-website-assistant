@@ -1,266 +1,362 @@
-- question: How much is the diploma fee?
+- question: Could you tell me the current tuition for Certification In Computer Operation?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:certification-in-computer-operation#course_facts
+    link_keys:
+    - course:certification-in-computer-operation
   tags:
   - handwritten
   - fee
-- question: How long is the course?
+- question: For Diploma in Information Technology, what be the tuition?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-information-technology#course_facts
+    link_keys:
+    - course:diploma-in-information-technology
+  tags:
+  - handwritten
+  - fee
+- question: How long is the Graphic Design (CorelDraw/Photoshop) certificate?
+  expect:
+    chunk_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop#course_facts
+    link_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop
   tags:
   - handwritten
   - duration
-- question: Where is ZIT located?
+- question: What is the duration for Advance Microsoft Excel for Data Analysis?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis#course_facts
+    link_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis
   tags:
   - handwritten
-  - contact
-- question: I want to enrol
+  - duration
+- question: How many months for Mobile App Development with Flutter or React Native?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native#course_facts
+    link_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native
+  tags:
+  - handwritten
+  - duration
+- question: What's the duration of Diploma In Desktop App Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-desktop-app-development#course_facts
+    link_keys:
+    - course:diploma-in-desktop-app-development
+  tags:
+  - handwritten
+  - duration
+- question: How do I apply for the Diploma In Frontend Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-frontend-development#course_facts
+    link_keys:
+    - course:diploma-in-frontend-development
   tags:
   - handwritten
   - apply
-- question: What courses are available?
+- question: What is the fee for Diploma in Backend Development?
   expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - list_courses
-- question: Can I pay in installments?
-  expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-backend-development#course_facts
+    link_keys:
+    - course:diploma-in-backend-development
   tags:
   - handwritten
   - fee
-- question: Which course should I take for IT?
+- question: For the full-stack diploma, how long is the course?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-full-stack-development#course_facts
+    link_keys:
+    - course:diploma-in-full-stack-development
+  tags:
+  - handwritten
+  - duration
+- question: How can I register for WordPress training?
+  expect:
+    chunk_keys:
+    - course:web-development-using-content-management-system-wordpress#course_facts
+    link_keys:
+    - course:web-development-using-content-management-system-wordpress
+  tags:
+  - handwritten
+  - apply
+- question: What's the tuition for Networking & System Security?
+  expect:
+    chunk_keys:
+    - course:diploma-in-networking-and-system-security#course_facts
+    link_keys:
+    - course:diploma-in-networking-and-system-security
+  tags:
+  - handwritten
+  - fee
+- question: How long does Data Analytics with Excel, SQL and Power BI take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau#course_facts
+    link_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau
+  tags:
+  - handwritten
+  - duration
+- question: How much is the Data Science course using Python and SQL?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-science-using-python-and-sql#course_facts
+    link_keys:
+    - course:diploma-in-data-science-using-python-and-sql
+  tags:
+  - handwritten
+  - fee
+- question: Can my child enroll in IoT and Robotics for Kids?
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids#course_facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids
+  tags:
+  - handwritten
+  - apply
+- question: What is the tuition for regular IoT and Robotics?
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular#course_facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular
+  tags:
+  - handwritten
+  - fee
+- question: How much is the AI Tools Mastery certificate?
+  expect:
+    chunk_keys:
+    - course:certificate-in-ai-tools-mastery#course_facts
+    link_keys:
+    - course:certificate-in-ai-tools-mastery
+  tags:
+  - handwritten
+  - fee
+- question: How long is the Certificate in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:certificate-in-cybersecurity#course_facts
+    link_keys:
+    - course:certificate-in-cybersecurity
+  tags:
+  - handwritten
+  - duration
+- question: What does the Diploma in Cybersecurity cost?
+  expect:
+    chunk_keys:
+    - course:diploma-in-cybersecurity#course_facts
+    link_keys:
+    - course:diploma-in-cybersecurity
+  tags:
+  - handwritten
+  - fee
+- question: Compare the Diploma and Advance Diploma in Cybersecurity.
+  expect:
+    chunk_keys:
+    - course:diploma-in-cybersecurity#course_facts
+    - course:advance-diploma-in-cybersecurity#course_facts
+    link_keys:
+    - course:diploma-in-cybersecurity
+    - course:advance-diploma-in-cybersecurity
   tags:
   - handwritten
   - compare
-- question: Do you offer business courses?
+- question: What is the fee for Ethical Hacking and Penetration Testing?
   expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - category
-- question: Tell me about cyber security
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: Admission requirements please
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - requirements
-- question: How can I contact admissions?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - contact
-- question: Is my certificate genuine?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - verify
-- question: What is ICSS?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - icss
-- question: Do you have project management?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: How do I register?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - apply
-- question: Which course lasts six months?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - duration
-- question: What is the cheapest programme?
-  expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web#course_facts
+    link_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web
   tags:
   - handwritten
   - fee
-- question: Are you accepting applications?
+- question: How long is Computer Forensic and Malware Analysis?
   expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - apply
-- question: Do you teach digital marketing?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: What happens after I apply?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - apply
-- question: Which programme is for human resource management?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: What certificate courses do you offer?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - category
-- question: How much is admission?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - fee
-- question: Can I study remotely?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - delivery
-- question: What is the entry qualification?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - requirements
-- question: Are certificates issued by ZIT?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - service
-- question: How do I verify a certificate?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - verify
-- question: Where can I find course categories?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - category
-- question: Which course is best for accounting?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: Do you offer supply chain management?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: How many months is occupational health and safety?
-  expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis#course_facts
+    link_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis
   tags:
   - handwritten
   - duration
-- question: Can I get help choosing a course?
+- question: How many months is Network Analytic Using Wireshark?
   expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - clarify
-- question: I need a course for entrepreneurship
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - course
-- question: What is the tuition as of today?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - fee
-- question: Please send me the application page
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - apply
-- question: Do you have a professional apply route?
-  expect:
-    chunk_keys: []
-    link_keys: []
-  tags:
-  - handwritten
-  - apply
-- question: What is the duration for the diploma?
-  expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:diploma-in-network-analytic-using-wireshark#course_facts
+    link_keys:
+    - course:diploma-in-network-analytic-using-wireshark
   tags:
   - handwritten
   - duration
-- question: Which course has project management?
+- question: What is the tuition for Mobile Phone Forensic Analysis using Wireshark?
   expect:
-    chunk_keys: []
-    link_keys: []
+    chunk_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark#course_facts
+    link_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark
   tags:
   - handwritten
-  - course
+  - fee
+- question: How can I sign up for the VSAT Installation certificate?
+  expect:
+    chunk_keys:
+    - course:certificate-in-vsat-installation#course_facts
+    link_keys:
+    - course:certificate-in-vsat-installation
+  tags:
+  - handwritten
+  - apply
+- question: What's the cost of the Solar Installation certificate?
+  expect:
+    chunk_keys:
+    - course:certificate-in-solar-installation#course_facts
+    link_keys:
+    - course:certificate-in-solar-installation
+  tags:
+  - handwritten
+  - fee
+- question: Abeg, how do I apply for Supply Chain Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-supply-chain-management#course_facts
+    link_keys:
+    - course:advance-diploma-in-supply-chain-management
+  tags:
+  - handwritten
+  - apply
+- question: How long is Logistics, Transport and Distribution?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution#course_facts
+    link_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution
+  tags:
+  - handwritten
+  - duration
+- question: I need the tuition details for Diploma in Project Management.
+  expect:
+    chunk_keys:
+    - course:diploma-in-project-management#course_facts
+    link_keys:
+    - course:diploma-in-project-management
+  tags:
+  - handwritten
+  - fee
+- question: Could you share the duration for Multimedia Technology?
+  expect:
+    chunk_keys:
+    - course:diploma-in-multimedia-technology#course_facts
+    link_keys:
+    - course:diploma-in-multimedia-technology
+  tags:
+  - handwritten
+  - duration
+- question: What is the fee for the Digital Marketing diploma?
+  expect:
+    chunk_keys:
+    - course:diploma-in-digital-marketing#course_facts
+    link_keys:
+    - course:diploma-in-digital-marketing
+  tags:
+  - handwritten
+  - fee
+- question: How do I enroll for video editing with Adobe Premiere Pro?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro#course_facts
+    link_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro
+  tags:
+  - handwritten
+  - apply
+- question: How long is the CapCut video-editing certificate?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-capcut#course_facts
+    link_keys:
+    - course:certificate-in-video-editing-using-capcut
+  tags:
+  - handwritten
+  - duration
+- question: Is the UI/UX Design diploma four months?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ui-ux-design#course_facts
+    link_keys:
+    - course:diploma-in-ui-ux-design
+  tags:
+  - handwritten
+  - duration
+- question: What does Telecommunication Engineering tuition cost?
+  expect:
+    chunk_keys:
+    - course:diploma-in-telecommunication-engineering#course_facts
+    link_keys:
+    - course:diploma-in-telecommunication-engineering
+  tags:
+  - handwritten
+  - fee
+- question: How long is Logistics, Health & Safety Management?
+  expect:
+    chunk_keys:
+    - course:diploma-in-logistics-health-and-safety-management#course_facts
+    link_keys:
+    - course:diploma-in-logistics-health-and-safety-management
+  tags:
+  - handwritten
+  - duration
+- question: How do I apply for Radio Operations?
+  expect:
+    chunk_keys:
+    - course:certificate-in-radio-operations#course_facts
+    link_keys:
+    - course:certificate-in-radio-operations
+  tags:
+  - handwritten
+  - apply
+- question: What are the tuition details for Computer Hardware Engineering?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-hardware-engineering#course_facts
+    link_keys:
+    - course:diploma-in-computer-hardware-engineering
+  tags:
+  - handwritten
+  - fee
+- question: How long is the Advance Diploma in Occupational Health & Safety?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-occupational-health-and-safety#course_facts
+    link_keys:
+    - course:advance-diploma-in-occupational-health-and-safety
+  tags:
+  - handwritten
+  - duration
+- question: Which careers connect to Advanced Diploma in Humanitarian Logistics?
+  expect:
+    chunk_keys:
+    - course:advanced-diploma-in-humanitarian-logistics#learning_careers
+    link_keys:
+    - course:advanced-diploma-in-humanitarian-logistics
+  tags:
+  - handwritten
+  - careers
+- question: What be the tuition for Advance Diploma in Human Resource Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-human-resource-management#course_facts
+    link_keys:
+    - course:advance-diploma-in-human-resource-management
+  tags:
+  - handwritten
+  - fee

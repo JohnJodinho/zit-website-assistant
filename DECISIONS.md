@@ -6,3 +6,5 @@
 - Gemini preview, deprecated, unlisted, or zero-quota models remain disabled unless a live model-ID check proves they are available.
 - Final tier choice will follow the Main Plan while keeping Groq tier 1 and Gemini tiers 2/3.
 - The shared Supabase URL in the local environment is on port 5432, so no transaction-pooler rewrite is required. `DATABASE_URL_SESSION` support will be added for explicit staging use.
+- Normalize BM25's strongest match by the query's maximum weighted term coverage before applying the 0.30 relevance gate; raw BM25 values are unbounded and made unrelated queries look relevant. The 215-case BGE evaluation then passed all retrieval, link, and refusal gates.
+- Pace BGE embedding requests at one every 2.1 seconds to honor the owner's 30-requests-per-minute testing cap, including retry attempts.

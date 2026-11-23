@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.content.snapshot import ContentSnapshot
 from app.db.models import EvaluationCase
 from app.search.hybrid import InMemoryHybridSearch
+from app.search.intent import detect_intents
 
 
 def _chunk_link_keys(metadata: dict[str, object]) -> list[str]:
@@ -49,6 +50,7 @@ class Evaluator:
         hit_total = 0
         link_total = 0
         eligible = 0
+        link_eligible = 0
         off_topic = 0
         refused_off_topic = 0
         wrong_refusal = 0
@@ -71,25 +73,36 @@ class Evaluator:
 
             if "off_topic" in tags or "injection" in tags:
                 off_topic += 1
-                if best_vector < vector_min and best_bm25 < bm25_min:
+                refused = (
+                    "injection" in tags and "injection" in detect_intents(case.question)
+                ) or (best_vector < vector_min and best_bm25 < bm25_min)
+                if refused:
                     refused_off_topic += 1
                 details.append(
                     {
                         "question": case.question,
                         "kind": "refusal",
-                        "refused": best_vector < vector_min and best_bm25 < bm25_min,
+                        "refused": refused,
+                        "best_vector": best_vector,
+                        "best_bm25": best_bm25,
                     }
                 )
                 continue
 
-            eligible += 1
-            chunk_hit = bool(
-                isinstance(expected_chunks, list)
-                and any(isinstance(key, str) and key in chunk_keys for key in expected_chunks)
+            expected_chunk_values = expected_chunks if isinstance(expected_chunks, list) else []
+            has_expected_chunks = bool(expected_chunk_values)
+            chunk_hit = has_expected_chunks and any(
+                isinstance(key, str) and key in chunk_keys for key in expected_chunk_values
             )
+            if has_expected_chunks:
+                eligible += 1
+                hit_total += int(chunk_hit)
+
             link_hit = False
-            if isinstance(expected_links, list):
-                expected_link_keys = [key for key in expected_links if isinstance(key, str)]
+            expected_link_values = expected_links if isinstance(expected_links, list) else []
+            if expected_link_values:
+                link_eligible += 1
+                expected_link_keys = [key for key in expected_link_values if isinstance(key, str)]
                 link_keys = {
                     key
                     for chunk in snapshot.chunks
@@ -98,9 +111,8 @@ class Evaluator:
                     if isinstance(key, str)
                 }
                 link_hit = bool(set(expected_link_keys).intersection(link_keys))
-            hit_total += int(chunk_hit)
-            link_total += int(link_hit)
-            if best_vector < vector_min and best_bm25 < bm25_min:
+                link_total += int(link_hit)
+            if has_expected_chunks and best_vector < vector_min and best_bm25 < bm25_min:
                 wrong_refusal += 1
             details.append(
                 {
@@ -112,7 +124,7 @@ class Evaluator:
             )
 
         retrieval_hit_rate = hit_total / eligible if eligible else 1.0
-        link_hit_rate = link_total / eligible if eligible else 1.0
+        link_hit_rate = link_total / link_eligible if link_eligible else 1.0
         off_topic_refusal_rate = refused_off_topic / off_topic if off_topic else 1.0
         wrong_refusal_rate = wrong_refusal / eligible if eligible else 0.0
         valid = (

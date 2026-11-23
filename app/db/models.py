@@ -349,7 +349,15 @@ class Setting(Base):
 
 class IngestionRun(Base):
     __tablename__ = "ingestion_runs"
-    __table_args__ = _assistant_table_args()
+    __table_args__ = (
+        Index(
+            "one_running_ingestion",
+            "status",
+            unique=True,
+            postgresql_where=sql_text("status = 'running'"),
+        ),
+        {"schema": "assistant"},
+    )
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),

@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from time import monotonic
 from typing import Literal, cast
 
 import httpx
@@ -16,6 +17,7 @@ from app.config import Settings
 BGE_MODEL_ALIAS = "bge-base-768-v1"
 BGE_MODEL_ID = "BAAI/bge-base-en-v1.5"
 BGE_DIMENSIONS = 768
+_MIN_EMBEDDING_REQUEST_INTERVAL_SECONDS = 2.1
 InputType = Literal["query", "document"]
 SleepFunction = Callable[[float], Awaitable[None]]
 
@@ -61,6 +63,8 @@ class BgeEmbeddingClient:
         self._sleep = sleep
         self._max_attempts = max_attempts
         self._metadata: ModelMetadata | None = None
+        self._request_gate = asyncio.Lock()
+        self._last_embedding_request_at: float | None = None
 
     async def close(self) -> None:
         if self._owns_client:
@@ -138,6 +142,17 @@ class BgeEmbeddingClient:
         payload = _response_json(response)
         return _parse_embedding_response(payload, metadata, len(texts))
 
+    async def _throttle_embedding_request(self) -> None:
+        async with self._request_gate:
+            now = monotonic()
+            if self._last_embedding_request_at is not None:
+                delay = _MIN_EMBEDDING_REQUEST_INTERVAL_SECONDS - (
+                    now - self._last_embedding_request_at
+                )
+                if delay > 0:
+                    await self._sleep(delay)
+            self._last_embedding_request_at = monotonic()
+
     async def _request(
         self,
         method: str,
@@ -149,6 +164,8 @@ class BgeEmbeddingClient:
         headers = {"Authorization": f"Bearer {self._api_key}"} if authenticated else {}
         for attempt in range(self._max_attempts):
             try:
+                if path == "/v1/embeddings":
+                    await self._throttle_embedding_request()
                 response = await self._client.request(
                     method,
                     f"{self._base_url}{path}",

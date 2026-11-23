@@ -15,7 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.api.deps import get_embedding_client, require_scope
 from app.config import Settings
 from app.content.archive import materialize_crawl_archive
-from app.content.idempotency import execute_idempotently
+from app.content.idempotency import (
+    execute_idempotently,
+    execute_idempotently_outside_transaction,
+)
 from app.content.importer import (
     inspect_supporting_json,
     load_crawl_import,
@@ -170,7 +173,7 @@ async def create_etl_run(
                 except (ValueError, RuntimeError) as exc:
                     raise HTTPException(status_code=422, detail="etl_stage_failed") from exc
 
-            return await execute_idempotently(
+            return await execute_idempotently_outside_transaction(
                 session,
                 request,
                 principal,

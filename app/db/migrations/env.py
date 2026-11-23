@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import MutableMapping
 from logging.config import fileConfig
+from typing import Literal
 
 from alembic import context
 from sqlalchemy import pool
@@ -28,6 +30,25 @@ def migration_url() -> URL:
     return build_async_url(secret_url.get_secret_value())
 
 
+def include_name(
+    name: str | None,
+    type_: Literal[
+        "schema",
+        "table",
+        "column",
+        "index",
+        "unique_constraint",
+        "foreign_key_constraint",
+        "check_constraint",
+    ],
+    parent_names: MutableMapping[
+        Literal["schema_name", "table_name", "schema_qualified_table_name"],
+        str | None,
+    ],
+) -> bool:
+    return type_ != "schema" or name == "assistant"
+
+
 def run_migrations_offline() -> None:
     context.configure(
         url=migration_url().render_as_string(hide_password=False),
@@ -44,6 +65,8 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        include_schemas=True,
+        include_name=include_name,
         compare_type=True,
     )
     with context.begin_transaction():
