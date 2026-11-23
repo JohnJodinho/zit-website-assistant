@@ -1,0 +1,266 @@
+- question: How much is the diploma fee?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - fee
+- question: How long is the course?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - duration
+- question: Where is ZIT located?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - contact
+- question: I want to enrol
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: What courses are available?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - list_courses
+- question: Can I pay in installments?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - fee
+- question: Which course should I take for IT?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - compare
+- question: Do you offer business courses?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - category
+- question: Tell me about cyber security
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: Admission requirements please
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - requirements
+- question: How can I contact admissions?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - contact
+- question: Is my certificate genuine?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - verify
+- question: What is ICSS?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - icss
+- question: Do you have project management?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: How do I register?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: Which course lasts six months?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - duration
+- question: What is the cheapest programme?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - fee
+- question: Are you accepting applications?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: Do you teach digital marketing?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: What happens after I apply?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: Which programme is for human resource management?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: What certificate courses do you offer?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - category
+- question: How much is admission?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - fee
+- question: Can I study remotely?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - delivery
+- question: What is the entry qualification?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - requirements
+- question: Are certificates issued by ZIT?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - service
+- question: How do I verify a certificate?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - verify
+- question: Where can I find course categories?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - category
+- question: Which course is best for accounting?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: Do you offer supply chain management?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: How many months is occupational health and safety?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - duration
+- question: Can I get help choosing a course?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - clarify
+- question: I need a course for entrepreneurship
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course
+- question: What is the tuition as of today?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - fee
+- question: Please send me the application page
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: Do you have a professional apply route?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - apply
+- question: What is the duration for the diploma?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - duration
+- question: Which course has project management?
+  expect:
+    chunk_keys: []
+    link_keys: []
+  tags:
+  - handwritten
+  - course

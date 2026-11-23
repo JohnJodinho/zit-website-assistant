@@ -1,0 +1,1281 @@
+- question: What is the tuition for Certification In Computer Operation?
+  expect:
+    chunk_keys:
+    - course:certification-in-computer-operation#facts
+    link_keys:
+    - course:certification-in-computer-operation
+  tags:
+  - automatic
+  - fee
+- question: How long does Certification In Computer Operation take?
+  expect:
+    chunk_keys:
+    - course:certification-in-computer-operation#facts
+    link_keys:
+    - course:certification-in-computer-operation
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certification In Computer Operation?
+  expect:
+    chunk_keys:
+    - course:certification-in-computer-operation#facts
+    link_keys:
+    - course:certification-in-computer-operation
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Information Technology?
+  expect:
+    chunk_keys:
+    - course:diploma-in-information-technology#facts
+    link_keys:
+    - course:diploma-in-information-technology
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Information Technology take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-information-technology#facts
+    link_keys:
+    - course:diploma-in-information-technology
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Information Technology?
+  expect:
+    chunk_keys:
+    - course:diploma-in-information-technology#facts
+    link_keys:
+    - course:diploma-in-information-technology
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Graphic Design (CorelDraw/Photoshop)?
+  expect:
+    chunk_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop#facts
+    link_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Graphic Design (CorelDraw/Photoshop) take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop#facts
+    link_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Graphic Design (CorelDraw/Photoshop)?
+  expect:
+    chunk_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop#facts
+    link_keys:
+    - course:certificate-in-graphic-design-coreldraw-photoshop
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Advance Microsoft Excel for Data
+    Analysis?
+  expect:
+    chunk_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis#facts
+    link_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Advance Microsoft Excel for Data Analysis
+    take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis#facts
+    link_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Advance Microsoft Excel for Data Analysis?
+  expect:
+    chunk_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis#facts
+    link_keys:
+    - course:certificate-in-advance-microsoft-excel-for-data-analysis
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma In Mobile App Development (Using Flutter
+    or React Native)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native#facts
+    link_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma In Mobile App Development (Using Flutter or React
+    Native) take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native#facts
+    link_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma In Mobile App Development (Using Flutter or
+    React Native)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native#facts
+    link_keys:
+    - course:diploma-in-mobile-app-development-using-flutter-or-react-native
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma In Desktop App Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-desktop-app-development#facts
+    link_keys:
+    - course:diploma-in-desktop-app-development
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma In Desktop App Development take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-desktop-app-development#facts
+    link_keys:
+    - course:diploma-in-desktop-app-development
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma In Desktop App Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-desktop-app-development#facts
+    link_keys:
+    - course:diploma-in-desktop-app-development
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma In Frontend Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-frontend-development#facts
+    link_keys:
+    - course:diploma-in-frontend-development
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma In Frontend Development take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-frontend-development#facts
+    link_keys:
+    - course:diploma-in-frontend-development
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma In Frontend Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-frontend-development#facts
+    link_keys:
+    - course:diploma-in-frontend-development
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Backend Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-backend-development#facts
+    link_keys:
+    - course:diploma-in-backend-development
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Backend Development take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-backend-development#facts
+    link_keys:
+    - course:diploma-in-backend-development
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Backend Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-backend-development#facts
+    link_keys:
+    - course:diploma-in-backend-development
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Full stack Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-full-stack-development#facts
+    link_keys:
+    - course:diploma-in-full-stack-development
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Full stack Development take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-full-stack-development#facts
+    link_keys:
+    - course:diploma-in-full-stack-development
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Full stack Development?
+  expect:
+    chunk_keys:
+    - course:diploma-in-full-stack-development#facts
+    link_keys:
+    - course:diploma-in-full-stack-development
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Web Development using Content Management System
+    (WordPress)?
+  expect:
+    chunk_keys:
+    - course:web-development-using-content-management-system-wordpress#facts
+    link_keys:
+    - course:web-development-using-content-management-system-wordpress
+  tags:
+  - automatic
+  - fee
+- question: How long does Web Development using Content Management System (WordPress)
+    take?
+  expect:
+    chunk_keys:
+    - course:web-development-using-content-management-system-wordpress#facts
+    link_keys:
+    - course:web-development-using-content-management-system-wordpress
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Web Development using Content Management System (WordPress)?
+  expect:
+    chunk_keys:
+    - course:web-development-using-content-management-system-wordpress#facts
+    link_keys:
+    - course:web-development-using-content-management-system-wordpress
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Networking & System Security?
+  expect:
+    chunk_keys:
+    - course:diploma-in-networking-system-security#facts
+    link_keys:
+    - course:diploma-in-networking-system-security
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Networking & System Security take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-networking-system-security#facts
+    link_keys:
+    - course:diploma-in-networking-system-security
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Networking & System Security?
+  expect:
+    chunk_keys:
+    - course:diploma-in-networking-system-security#facts
+    link_keys:
+    - course:diploma-in-networking-system-security
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Data Analytics (Using Excel, SQL, and
+    Power BI/Tableau)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau#facts
+    link_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Data Analytics (Using Excel, SQL, and Power BI/Tableau)
+    take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau#facts
+    link_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Data Analytics (Using Excel, SQL, and Power
+    BI/Tableau)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau#facts
+    link_keys:
+    - course:diploma-in-data-analytics-using-excel-sql-and-power-bi-tableau
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Data Science (Using Python and SQL)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-science-using-python-and-sql#facts
+    link_keys:
+    - course:diploma-in-data-science-using-python-and-sql
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Data Science (Using Python and SQL) take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-science-using-python-and-sql#facts
+    link_keys:
+    - course:diploma-in-data-science-using-python-and-sql
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Data Science (Using Python and SQL)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-data-science-using-python-and-sql#facts
+    link_keys:
+    - course:diploma-in-data-science-using-python-and-sql
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: "What is the tuition for Certificate in IoT (Internet of Things) and Robotics\
+    \ \u2013 For Kids?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids
+  tags:
+  - automatic
+  - fee
+- question: "How long does Certificate in IoT (Internet of Things) and Robotics \u2013\
+    \ For Kids take?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids
+  tags:
+  - automatic
+  - duration
+- question: "How do I apply for Certificate in IoT (Internet of Things) and Robotics\
+    \ \u2013 For Kids?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-for-kids
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: "What is the tuition for Certificate in IoT (Internet of Things) and Robotics\
+    \ \u2013 Regular?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular
+  tags:
+  - automatic
+  - fee
+- question: "How long does Certificate in IoT (Internet of Things) and Robotics \u2013\
+    \ Regular take?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular
+  tags:
+  - automatic
+  - duration
+- question: "How do I apply for Certificate in IoT (Internet of Things) and Robotics\
+    \ \u2013 Regular?"
+  expect:
+    chunk_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular#facts
+    link_keys:
+    - course:certificate-in-iot-internet-of-things-and-robotics-regular
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in AI Tools Mastery?
+  expect:
+    chunk_keys:
+    - course:certificate-in-ai-tools-mastery#facts
+    link_keys:
+    - course:certificate-in-ai-tools-mastery
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in AI Tools Mastery take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-ai-tools-mastery#facts
+    link_keys:
+    - course:certificate-in-ai-tools-mastery
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in AI Tools Mastery?
+  expect:
+    chunk_keys:
+    - course:certificate-in-ai-tools-mastery#facts
+    link_keys:
+    - course:certificate-in-ai-tools-mastery
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:certificate-in-cybersecurity#facts
+    link_keys:
+    - course:certificate-in-cybersecurity
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Cybersecurity take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-cybersecurity#facts
+    link_keys:
+    - course:certificate-in-cybersecurity
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:certificate-in-cybersecurity#facts
+    link_keys:
+    - course:certificate-in-cybersecurity
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:diploma-in-cybersecurity#facts
+    link_keys:
+    - course:diploma-in-cybersecurity
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Cybersecurity take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-cybersecurity#facts
+    link_keys:
+    - course:diploma-in-cybersecurity
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:diploma-in-cybersecurity#facts
+    link_keys:
+    - course:diploma-in-cybersecurity
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-cybersecurity#facts
+    link_keys:
+    - course:advance-diploma-in-cybersecurity
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Cybersecurity take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-cybersecurity#facts
+    link_keys:
+    - course:advance-diploma-in-cybersecurity
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Cybersecurity?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-cybersecurity#facts
+    link_keys:
+    - course:advance-diploma-in-cybersecurity
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Ethical Hacking and Penetration Testing
+    (Mobile, System or Web)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web#facts
+    link_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Ethical Hacking and Penetration Testing (Mobile,
+    System or Web) take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web#facts
+    link_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Ethical Hacking and Penetration Testing
+    (Mobile, System or Web)?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web#facts
+    link_keys:
+    - course:diploma-in-ethical-hacking-and-penetration-testing-mobile-system-or-web
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Computer Forensic and Malware Analysis?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis#facts
+    link_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Computer Forensic and Malware Analysis take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis#facts
+    link_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Computer Forensic and Malware Analysis?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis#facts
+    link_keys:
+    - course:diploma-in-computer-forensic-and-malware-analysis
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Network Analytic Using Wireshark?
+  expect:
+    chunk_keys:
+    - course:diploma-in-network-analytic-using-wireshark#facts
+    link_keys:
+    - course:diploma-in-network-analytic-using-wireshark
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Network Analytic Using Wireshark take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-network-analytic-using-wireshark#facts
+    link_keys:
+    - course:diploma-in-network-analytic-using-wireshark
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Network Analytic Using Wireshark?
+  expect:
+    chunk_keys:
+    - course:diploma-in-network-analytic-using-wireshark#facts
+    link_keys:
+    - course:diploma-in-network-analytic-using-wireshark
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Mobile Phone Forensic Analysis Using Wireshark?
+  expect:
+    chunk_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark#facts
+    link_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark
+  tags:
+  - automatic
+  - fee
+- question: How long does Mobile Phone Forensic Analysis Using Wireshark take?
+  expect:
+    chunk_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark#facts
+    link_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Mobile Phone Forensic Analysis Using Wireshark?
+  expect:
+    chunk_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark#facts
+    link_keys:
+    - course:mobile-phone-forensic-analysis-using-wireshark
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in VSAT Installation?
+  expect:
+    chunk_keys:
+    - course:certificate-in-vsat-installation#facts
+    link_keys:
+    - course:certificate-in-vsat-installation
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in VSAT Installation take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-vsat-installation#facts
+    link_keys:
+    - course:certificate-in-vsat-installation
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in VSAT Installation?
+  expect:
+    chunk_keys:
+    - course:certificate-in-vsat-installation#facts
+    link_keys:
+    - course:certificate-in-vsat-installation
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Solar Installation?
+  expect:
+    chunk_keys:
+    - course:certificate-in-solar-installation#facts
+    link_keys:
+    - course:certificate-in-solar-installation
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Solar Installation take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-solar-installation#facts
+    link_keys:
+    - course:certificate-in-solar-installation
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Solar Installation?
+  expect:
+    chunk_keys:
+    - course:certificate-in-solar-installation#facts
+    link_keys:
+    - course:certificate-in-solar-installation
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Supply Chain Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-supply-chain-management#facts
+    link_keys:
+    - course:advance-diploma-in-supply-chain-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Supply Chain Management take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-supply-chain-management#facts
+    link_keys:
+    - course:advance-diploma-in-supply-chain-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Supply Chain Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-supply-chain-management#facts
+    link_keys:
+    - course:advance-diploma-in-supply-chain-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Logistics, Transport and Distribution?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution#facts
+    link_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Logistics, Transport and Distribution
+    take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution#facts
+    link_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Logistics, Transport and Distribution?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution#facts
+    link_keys:
+    - course:advance-diploma-in-logistics-transport-and-distribution
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Project Management?
+  expect:
+    chunk_keys:
+    - course:diploma-in-project-management#facts
+    link_keys:
+    - course:diploma-in-project-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Project Management take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-project-management#facts
+    link_keys:
+    - course:diploma-in-project-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Project Management?
+  expect:
+    chunk_keys:
+    - course:diploma-in-project-management#facts
+    link_keys:
+    - course:diploma-in-project-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Multimedia Technology?
+  expect:
+    chunk_keys:
+    - course:diploma-in-multimedia-technology#facts
+    link_keys:
+    - course:diploma-in-multimedia-technology
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Multimedia Technology take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-multimedia-technology#facts
+    link_keys:
+    - course:diploma-in-multimedia-technology
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Multimedia Technology?
+  expect:
+    chunk_keys:
+    - course:diploma-in-multimedia-technology#facts
+    link_keys:
+    - course:diploma-in-multimedia-technology
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Digital Marketing?
+  expect:
+    chunk_keys:
+    - course:diploma-in-digital-marketing#facts
+    link_keys:
+    - course:diploma-in-digital-marketing
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Digital Marketing take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-digital-marketing#facts
+    link_keys:
+    - course:diploma-in-digital-marketing
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Digital Marketing?
+  expect:
+    chunk_keys:
+    - course:diploma-in-digital-marketing#facts
+    link_keys:
+    - course:diploma-in-digital-marketing
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Video Editing using Adobe Premiere
+    Pro?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Video Editing using Adobe Premiere Pro take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Video Editing using Adobe Premiere Pro?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-adobe-premiere-pro
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Video Editing using CapCut?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-capcut#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-capcut
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Video Editing using CapCut take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-capcut#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-capcut
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Video Editing using CapCut?
+  expect:
+    chunk_keys:
+    - course:certificate-in-video-editing-using-capcut#facts
+    link_keys:
+    - course:certificate-in-video-editing-using-capcut
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in UI/UX Design?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ui-ux-design#facts
+    link_keys:
+    - course:diploma-in-ui-ux-design
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in UI/UX Design take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ui-ux-design#facts
+    link_keys:
+    - course:diploma-in-ui-ux-design
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in UI/UX Design?
+  expect:
+    chunk_keys:
+    - course:diploma-in-ui-ux-design#facts
+    link_keys:
+    - course:diploma-in-ui-ux-design
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Telecommunication Engineering?
+  expect:
+    chunk_keys:
+    - course:diploma-in-telecommunication-engineering#facts
+    link_keys:
+    - course:diploma-in-telecommunication-engineering
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Telecommunication Engineering take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-telecommunication-engineering#facts
+    link_keys:
+    - course:diploma-in-telecommunication-engineering
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Telecommunication Engineering?
+  expect:
+    chunk_keys:
+    - course:diploma-in-telecommunication-engineering#facts
+    link_keys:
+    - course:diploma-in-telecommunication-engineering
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Logistics, Health & Safety Management?
+  expect:
+    chunk_keys:
+    - course:diploma-in-logistics-health-safety-management#facts
+    link_keys:
+    - course:diploma-in-logistics-health-safety-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Logistics, Health & Safety Management take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-logistics-health-safety-management#facts
+    link_keys:
+    - course:diploma-in-logistics-health-safety-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Logistics, Health & Safety Management?
+  expect:
+    chunk_keys:
+    - course:diploma-in-logistics-health-safety-management#facts
+    link_keys:
+    - course:diploma-in-logistics-health-safety-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Certificate in Radio Operations?
+  expect:
+    chunk_keys:
+    - course:certificate-in-radio-operations#facts
+    link_keys:
+    - course:certificate-in-radio-operations
+  tags:
+  - automatic
+  - fee
+- question: How long does Certificate in Radio Operations take?
+  expect:
+    chunk_keys:
+    - course:certificate-in-radio-operations#facts
+    link_keys:
+    - course:certificate-in-radio-operations
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Certificate in Radio Operations?
+  expect:
+    chunk_keys:
+    - course:certificate-in-radio-operations#facts
+    link_keys:
+    - course:certificate-in-radio-operations
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Diploma in Computer Hardware Engineering?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-hardware-engineering#facts
+    link_keys:
+    - course:diploma-in-computer-hardware-engineering
+  tags:
+  - automatic
+  - fee
+- question: How long does Diploma in Computer Hardware Engineering take?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-hardware-engineering#facts
+    link_keys:
+    - course:diploma-in-computer-hardware-engineering
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Diploma in Computer Hardware Engineering?
+  expect:
+    chunk_keys:
+    - course:diploma-in-computer-hardware-engineering#facts
+    link_keys:
+    - course:diploma-in-computer-hardware-engineering
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Occupational Health & Safety?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-occupational-health-safety#facts
+    link_keys:
+    - course:advance-diploma-in-occupational-health-safety
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Occupational Health & Safety take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-occupational-health-safety#facts
+    link_keys:
+    - course:advance-diploma-in-occupational-health-safety
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Occupational Health & Safety?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-occupational-health-safety#facts
+    link_keys:
+    - course:advance-diploma-in-occupational-health-safety
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advanced Diploma in Humanitarian Logistics?
+  expect:
+    chunk_keys:
+    - course:advanced-diploma-in-humanitarian-logistics#facts
+    link_keys:
+    - course:advanced-diploma-in-humanitarian-logistics
+  tags:
+  - automatic
+  - fee
+- question: How long does Advanced Diploma in Humanitarian Logistics take?
+  expect:
+    chunk_keys:
+    - course:advanced-diploma-in-humanitarian-logistics#facts
+    link_keys:
+    - course:advanced-diploma-in-humanitarian-logistics
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advanced Diploma in Humanitarian Logistics?
+  expect:
+    chunk_keys:
+    - course:advanced-diploma-in-humanitarian-logistics#facts
+    link_keys:
+    - course:advanced-diploma-in-humanitarian-logistics
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Business Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-business-management#facts
+    link_keys:
+    - course:advance-diploma-in-business-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Business Management take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-business-management#facts
+    link_keys:
+    - course:advance-diploma-in-business-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Business Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-business-management#facts
+    link_keys:
+    - course:advance-diploma-in-business-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Entrepreneurship Development?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-entrepreneurship-development#facts
+    link_keys:
+    - course:advance-diploma-in-entrepreneurship-development
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Entrepreneurship Development take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-entrepreneurship-development#facts
+    link_keys:
+    - course:advance-diploma-in-entrepreneurship-development
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Entrepreneurship Development?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-entrepreneurship-development#facts
+    link_keys:
+    - course:advance-diploma-in-entrepreneurship-development
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Hospitality Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-hospitality-management#facts
+    link_keys:
+    - course:advance-diploma-in-hospitality-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Hospitality Management take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-hospitality-management#facts
+    link_keys:
+    - course:advance-diploma-in-hospitality-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Hospitality Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-hospitality-management#facts
+    link_keys:
+    - course:advance-diploma-in-hospitality-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Human Resource Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-human-resource-management#facts
+    link_keys:
+    - course:advance-diploma-in-human-resource-management
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Human Resource Management take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-human-resource-management#facts
+    link_keys:
+    - course:advance-diploma-in-human-resource-management
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Human Resource Management?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-human-resource-management#facts
+    link_keys:
+    - course:advance-diploma-in-human-resource-management
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for Advance Diploma in Accounting and System Security?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-accounting-and-system-security#facts
+    link_keys:
+    - course:advance-diploma-in-accounting-and-system-security
+  tags:
+  - automatic
+  - fee
+- question: How long does Advance Diploma in Accounting and System Security take?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-accounting-and-system-security#facts
+    link_keys:
+    - course:advance-diploma-in-accounting-and-system-security
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for Advance Diploma in Accounting and System Security?
+  expect:
+    chunk_keys:
+    - course:advance-diploma-in-accounting-and-system-security#facts
+    link_keys:
+    - course:advance-diploma-in-accounting-and-system-security
+    - apply:general
+  tags:
+  - automatic
+  - apply
+- question: What is the tuition for CCNA?
+  expect:
+    chunk_keys:
+    - course:ccna#facts
+    link_keys:
+    - course:ccna
+  tags:
+  - automatic
+  - fee
+- question: How long does CCNA take?
+  expect:
+    chunk_keys:
+    - course:ccna#facts
+    link_keys:
+    - course:ccna
+  tags:
+  - automatic
+  - duration
+- question: How do I apply for CCNA?
+  expect:
+    chunk_keys:
+    - course:ccna#facts
+    link_keys:
+    - course:ccna
+    - apply:general
+  tags:
+  - automatic
+  - apply

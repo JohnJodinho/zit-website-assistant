@@ -5,11 +5,11 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.api.deps import require_scope
+from app.api.deps import get_embedding_client, require_scope
 from app.content.idempotency import execute_idempotently
 from app.content.repository import (
     active_release_id,
@@ -17,9 +17,16 @@ from app.content.repository import (
     release_chunks,
     release_links,
 )
-from app.content.snapshot import load_release_snapshot, validate_release_content
-from app.db.models import Chunk, Link, Release, ReleaseChunk, ReleaseLink
+from app.content.snapshot import (
+    ContentSnapshot,
+    SnapshotChunk,
+    SnapshotLink,
+    load_release_snapshot,
+    validate_release_content,
+)
+from app.db.models import Chunk, EvaluationCase, Link, Release, ReleaseChunk, ReleaseLink, Setting
 from app.db.session import get_db_session
+from app.search.evaluation import Evaluator
 from app.security.keys import AdminPrincipal, AdminScope
 
 router = APIRouter(prefix="/admin/v1", tags=["releases"])
@@ -89,6 +96,7 @@ async def evaluate_release(
     principal: Annotated[AdminPrincipal, Depends(require_scope(AdminScope.PUBLISH))],
 ) -> dict[str, object]:
     settings = request.app.state.settings
+    embedding_client = get_embedding_client(request)
 
     async def mutation() -> dict[str, object]:
         release = await session.get(Release, release_id)
@@ -96,14 +104,56 @@ async def evaluate_release(
             raise HTTPException(status_code=404, detail="release_not_found")
         chunks, links = await _release_records(session, release_id)
         check = validate_release_content(chunks, links, settings)
+        query_vectors: dict[str, tuple[float, ...]] = {}
+        search_report: dict[str, object] = {"available": False, "reason": "no_eval_cases"}
+        if check.valid:
+            cases = (
+                await session.scalars(select(EvaluationCase).where(EvaluationCase.active.is_(True)))
+            ).all()
+            if cases:
+                vectors = await embedding_client.embed_texts(
+                    [case.question for case in cases],
+                    input_type="query",
+                )
+                query_vectors = {
+                    case.question: tuple(vector)
+                    for case, vector in zip(cases, vectors, strict=True)
+                }
+                snapshot = await load_release_snapshot_for_evaluation(
+                    session,
+                    release_id,
+                    settings,
+                    chunks,
+                    links,
+                )
+                evaluation_report = await Evaluator().evaluate(
+                    session,
+                    snapshot,
+                    query_vectors,
+                    retrieval_min_hit=settings.gate_retrieval_min_hit,
+                    link_min_hit=0.95,
+                    off_topic_min_refusal=0.95,
+                    wrong_refusal_max=0.05,
+                    vector_min=settings.gate_vector_min,
+                    bm25_min=settings.gate_bm25_min,
+                )
+                search_report = {
+                    "available": True,
+                    "valid": evaluation_report.valid,
+                    "retrieval_hit_rate": evaluation_report.retrieval_hit_rate,
+                    "link_hit_rate": evaluation_report.link_hit_rate,
+                    "off_topic_refusal_rate": evaluation_report.off_topic_refusal_rate,
+                    "wrong_refusal_rate": evaluation_report.wrong_refusal_rate,
+                    "details": evaluation_report.details,
+                }
         report: dict[str, object] = {
             "data_check": {
                 "valid": check.valid,
                 "errors": list(check.errors),
                 "warnings": list(check.warnings),
             },
-            "search_tests": {"available": False, "reason": "phase_3_not_implemented"},
-            "publishable": False,
+            "search_tests": search_report,
+            "publishable": check.valid and bool(search_report.get("valid", False)),
             "evaluated_at": datetime.now(UTC).isoformat(),
         }
         release.eval_report = report
@@ -130,17 +180,129 @@ async def evaluate_release(
 @router.post("/releases/{release_id}/publish")
 async def publish_release(
     release_id: int,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
     principal: Annotated[AdminPrincipal, Depends(require_scope(AdminScope.PUBLISH))],
 ) -> dict[str, object]:
-    raise HTTPException(status_code=409, detail="search_evaluation_unavailable")
+    async def mutation() -> dict[str, object]:
+        release = await session.get(Release, release_id)
+        if release is None:
+            raise HTTPException(status_code=404, detail="release_not_found")
+        if release.status == "published":
+            raise HTTPException(status_code=409, detail="release_already_published")
+        if not release.status == "draft":
+            raise HTTPException(status_code=409, detail="release_not_draft")
+        report = release.eval_report
+        if not isinstance(report, dict) or report.get("publishable") is not True:
+            raise HTTPException(status_code=409, detail="release_evaluation_required")
+
+        previous_id = await active_release_id(session)
+        now = datetime.now(UTC)
+        release.status = "published"
+        release.published_at = now
+        await session.execute(
+            update(Setting)
+            .where(Setting.key == "active_release_id")
+            .values(value={"value": release_id}, updated_by=principal.name)
+        )
+        active_setting = await session.get(Setting, "active_release_id")
+        if active_setting is None:
+            session.add(
+                Setting(
+                    key="active_release_id",
+                    value={"value": release_id},
+                    updated_by=principal.name,
+                )
+            )
+        add_audit_record(
+            session,
+            actor=principal.name,
+            action="release.publish",
+            target=str(release_id),
+            before={"active_release_id": previous_id},
+            after={"active_release_id": release_id},
+            trace_id=request.state.trace_id,
+        )
+        await session.flush()
+        candidate = await load_release_snapshot(
+            session,
+            release_id,
+            request.app.state.settings,
+        )
+        request.app.state.active_snapshot = candidate
+        request.app.state.snapshot_error = None
+        return {
+            "status": "published",
+            "release_id": release_id,
+            "previous_release_id": previous_id,
+            "eval_report": report,
+        }
+
+    return await execute_idempotently(
+        session,
+        request,
+        principal,
+        {"release_id": release_id, "action": "publish"},
+        mutation,
+    )
 
 
 @router.post("/releases/{release_id}/rollback")
 async def rollback_release(
     release_id: int,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
     principal: Annotated[AdminPrincipal, Depends(require_scope(AdminScope.PUBLISH))],
 ) -> dict[str, object]:
-    raise HTTPException(status_code=409, detail="search_evaluation_unavailable")
+    async def mutation() -> dict[str, object]:
+        release = await session.get(Release, release_id)
+        if release is None:
+            raise HTTPException(status_code=404, detail="release_not_found")
+        if release.status != "published":
+            raise HTTPException(status_code=409, detail="rollback_target_not_published")
+        current_id = await active_release_id(session)
+        if release_id == current_id:
+            raise HTTPException(status_code=409, detail="release_already_active")
+        await session.execute(
+            update(Setting)
+            .where(Setting.key == "active_release_id")
+            .values(value={"value": release_id}, updated_by=principal.name)
+        )
+        active_setting = await session.get(Setting, "active_release_id")
+        if active_setting is None:
+            session.add(
+                Setting(
+                    key="active_release_id",
+                    value={"value": release_id},
+                    updated_by=principal.name,
+                )
+            )
+        add_audit_record(
+            session,
+            actor=principal.name,
+            action="release.rollback",
+            target=str(release_id),
+            before={"active_release_id": current_id},
+            after={"active_release_id": release_id},
+            trace_id=request.state.trace_id,
+        )
+        await session.flush()
+        candidate = await load_release_snapshot(
+            session,
+            release_id,
+            request.app.state.settings,
+        )
+        request.app.state.active_snapshot = candidate
+        request.app.state.snapshot_error = None
+        return {"status": "rolled_back", "release_id": release_id}
+
+    return await execute_idempotently(
+        session,
+        request,
+        principal,
+        {"release_id": release_id, "action": "rollback"},
+        mutation,
+    )
 
 
 @router.post("/releases/current-draft/discard")
@@ -226,6 +388,49 @@ async def _release_records(
         )
     ).all()
     return list(chunks), list(links)
+
+
+async def load_release_snapshot_for_evaluation(
+    session: AsyncSession,
+    release_id: int,
+    settings: object,
+    chunks: list[Chunk],
+    links: list[Link],
+) -> ContentSnapshot:
+    del session, settings
+    snapshot_chunks = tuple(
+        SnapshotChunk(
+            id=str(chunk.id),
+            chunk_key=chunk.chunk_key,
+            doc_key=chunk.doc_key,
+            kind=chunk.kind,
+            text=chunk.text,
+            embed_text=chunk.embed_text,
+            token_count=chunk.token_count,
+            metadata=dict(chunk.metadata_json),
+            embedding=tuple(float(value) for value in (chunk.embedding or [])),
+        )
+        for chunk in chunks
+    )
+    snapshot_links = tuple(
+        SnapshotLink(
+            link_key=link.link_key,
+            kind=link.kind,
+            label=link.label,
+            url=link.url,
+            description=link.description,
+            aliases=tuple(link.aliases),
+            priority=link.priority,
+        )
+        for link in links
+        if link.active
+    )
+    return ContentSnapshot(
+        release_id=release_id,
+        chunks=snapshot_chunks,
+        links=snapshot_links,
+        loaded_at=datetime.now(UTC).isoformat(),
+    )
 
 
 def _diff_keys[Value](

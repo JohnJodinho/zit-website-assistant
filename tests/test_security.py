@@ -20,6 +20,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 
+def test_wildcard_cors_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, widget_origins="*")
+
+
 def test_generated_admin_key_has_a_verifiable_hash() -> None:
     raw_key, digest = generate_admin_key()
 

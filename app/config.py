@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     etl_max_count_swing_percent: int = 50
     etl_missing_section_fail_percent: int = 10
     chunk_hard_max_tokens: int = 350
+    gate_vector_min: float = 0.62
+    gate_bm25_min: float = 0.30
+    gate_bm25_min_degraded: float = 0.45
+    gate_retrieval_min_hit: float = 0.95
+    gate_max_drop_points: float = 0.02
+    faq_direct_sim: float = 0.90
     session_pepper: SecretStr | None = None
     admin_bootstrap_key_hash: SecretStr | None = None
     admin_docs_username: SecretStr | None = None
@@ -50,6 +56,32 @@ class Settings(BaseSettings):
     git_sha: str = "local"
     sentry_dsn: SecretStr = SecretStr("placeholder")
     otlp_endpoint: str = ""
+    google_ai_api_key: SecretStr | None = None
+    groq_api_key: SecretStr | None = None
+    llm_models: str = "[]"
+    quota_safety_per_minute: float = 0.90
+    quota_safety_daily: float = 0.95
+    llm_pretoken_deadline_s: float = 12.0
+    llm_first_token_timeout_s: float = 8.0
+    llm_max_attempts: int = 3
+    breaker_failures: int = 3
+    breaker_min_open_s: float = 30.0
+    sse_ping_seconds: float = 15.0
+    message_max_chars: int = 500
+    session_ttl_minutes: int = 30
+    session_max_hours: int = 4
+    session_cache_seconds: int = 300
+    turnstile_enabled: bool = False
+    turnstile_secret: SecretStr | None = None
+    rollout_percent: int = 0
+    kill_switch: bool = False
+    maintenance_message: str = "ZIT assistant is temporarily unavailable."
+    fast_greeting: bool = True
+    fast_contact: bool = True
+    fast_apply: bool = True
+    fast_field: bool = True
+    fast_category: bool = True
+    fast_faq: bool = True
 
     @model_validator(mode="after")
     def validate_settings(self) -> Settings:

@@ -11,10 +11,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.admin.content_routes import router as content_router
+from app.api.admin.debug_routes import router as debug_router
 from app.api.admin.docs import register_admin_docs
 from app.api.admin.etl_routes import router as etl_router
 from app.api.admin.faq_routes import router as faq_router
 from app.api.admin.link_routes import router as link_router
+from app.api.admin.ops_routes import router as ops_router
 from app.api.admin.release_routes import router as release_router
 from app.api.admin.routes import router as admin_router
 from app.api.errors import (
@@ -23,11 +25,12 @@ from app.api.errors import (
     handle_validation_error,
 )
 from app.api.middleware import request_context_middleware
+from app.api.public.chat import router as chat_router
 from app.api.public.health import router as health_router
 from app.config import Settings, get_settings
 from app.content.snapshot import load_active_snapshot
-from app.db.session import create_database_engine, create_session_factory
 from app.db.models import IngestionRun
+from app.db.session import create_database_engine, create_session_factory
 from app.obs.instrumentation import instrument_application
 from app.obs.logging import configure_logging, get_logger
 from app.obs.sentry import initialize_sentry
@@ -111,7 +114,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(app_settings.allowed_widget_origins),
         allow_credentials=False,
-        allow_methods=["GET", "POST", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
         expose_headers=["X-Request-ID"],
     )
@@ -119,12 +122,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(RequestValidationError, handle_validation_error)
     application.add_exception_handler(Exception, handle_unexpected_error)
     application.include_router(health_router)
+    application.include_router(chat_router)
     application.include_router(admin_router)
     application.include_router(content_router)
     application.include_router(etl_router)
     application.include_router(faq_router)
     application.include_router(link_router)
     application.include_router(release_router)
+    application.include_router(debug_router)
+    application.include_router(ops_router)
     register_admin_docs(application, app_settings)
     instrument_application(application, engine, app_settings)
     return application

@@ -103,7 +103,7 @@ def test_phase_two_routes_are_registered_without_public_chat() -> None:
         assert client.get("/api/v1/chat").status_code == 404
 
 
-def test_publish_stays_blocked_until_search_evaluation_exists() -> None:
+def test_publish_requires_database_when_search_evaluation_is_not_available() -> None:
     app = create_app(Settings(_env_file=None))
     app.dependency_overrides[get_admin_principal] = lambda: AdminPrincipal(
         UUID(int=1),
@@ -114,5 +114,5 @@ def test_publish_stays_blocked_until_search_evaluation_exists() -> None:
     with TestClient(app) as client:
         response = client.post("/admin/v1/releases/1/publish")
 
-    assert response.status_code == 409
-    assert response.json()["error"]["code"] == "search_evaluation_unavailable"
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "database_unavailable"
