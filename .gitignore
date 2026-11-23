@@ -1,6 +1,5 @@
 misc
 etl/
-scripts/
 .github/instructions/
 .vscode
 .env
@@ -10,3 +9,5 @@ etl/data/chroma_db/
 __pycache__/
 *.py[cod]
 venv
+widget/node_modules/
+widget/dist/
