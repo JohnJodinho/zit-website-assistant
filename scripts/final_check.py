@@ -201,9 +201,17 @@ def main() -> None:
         gate_for_test("SEARCH-4", ["tests/test_search.py"], "synthetic FAQ search core pass")
     )
     rows.append(gate_for_test("SEARCH-5", ["tests/test_search.py"], "fast path tests pass"))
-    rows.append(
-        file_gate("RELEASE-LIVE", ["app/api/admin/release_routes.py", "app/search/evaluation.py"])
-    )
+    release_check = run([PYTHON, "-m", "scripts.check_release_live"])
+    if release_check.returncode == 0:
+        detail = release_check.stdout.strip().splitlines()[-1][:160]
+        rows.append(Gate("RELEASE-LIVE", "AGENT", "PASS", detail))
+    else:
+        detail = (
+            release_check.stdout.strip().splitlines()[-1][:160]
+            if release_check.stdout
+            else "live release check failed"
+        )
+        rows.append(Gate("RELEASE-LIVE", "AGENT", "FAIL", detail))
 
     rows.append(gate_for_test("CHAT-1", ["tests/test_chat.py"], "chat failover primitives pass"))
     rows.append(gate_for_test("CHAT-2", ["tests/test_chat.py"], "free-only enforcement pass"))
@@ -219,8 +227,17 @@ def main() -> None:
     rows.append(gate_for_test("CHAT-6", ["tests/test_api.py"], "SSE framing tests pass"))
     rows.append(gate_for_test("CHAT-7", ["tests/test_search.py"], "cache primitives pass"))
 
-    rows.append(live_gate("LIVE-1", "GOOGLE_AI_API_KEY"))
-    rows.append(live_gate("LIVE-2", "GROQ_API_KEY"))
+    live_check = run([PYTHON, "-m", "scripts.live_provider_check"])
+    live_output = live_check.stdout.strip()
+    if "LIVE SKIPPED" in live_output:
+        rows.append(Gate("LIVE-1", "AGENT", "SKIPPED", "provider key missing"))
+        rows.append(Gate("LIVE-2", "AGENT", "SKIPPED", "provider key missing"))
+    elif live_check.returncode == 0:
+        rows.append(Gate("LIVE-1", "AGENT", "PASS", "live streaming check passed"))
+        rows.append(Gate("LIVE-2", "AGENT", "PASS", "live answer facts check passed"))
+    else:
+        rows.append(Gate("LIVE-1", "AGENT", "FAIL", "live provider check failed"))
+        rows.append(Gate("LIVE-2", "AGENT", "FAIL", "live provider check failed"))
     rows.append(gate_for_test("LOAD-1", ["tests/test_chat.py"], "load-test placeholder pass"))
     rows.append(
         gate_for_test(
@@ -230,8 +247,17 @@ def main() -> None:
         )
     )
 
-    for gate_id in ("DRILL-1", "DRILL-2", "DRILL-3", "DRILL-4", "DRILL-5", "DRILL-6"):
-        rows.append(Gate(gate_id, "AGENT", "NOT_RUN", "drill not yet automated"))
+    for index, gate_id in enumerate(
+        ("DRILL-1", "DRILL-2", "DRILL-3", "DRILL-4", "DRILL-5", "DRILL-6"),
+        start=1,
+    ):
+        rows.append(
+            gate_for_test(
+                gate_id,
+                ["tests/test_drills.py", "-k", f"drill_{index}"],
+                f"{gate_id} automated drill pass",
+            )
+        )
 
     widget_dir = Path("widget")
     rows.append(

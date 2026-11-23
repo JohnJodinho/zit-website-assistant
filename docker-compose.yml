@@ -19,6 +19,15 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-placeholder}
       PUBLIC_DOCS_ENABLED: "false"
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
+      ZIT_API_KEY: ${ZIT_API_KEY:-}
+      EMBEDDING_API_BASE_URL: ${EMBEDDING_API_BASE_URL:-https://johnalbarkaibrahim-sentimentscope.hf.space}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-base-768-v1}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      LLM_MODELS: ${LLM_MODELS:-[]}
+      ROLLOUT_PERCENT: ${ROLLOUT_PERCENT:-0}
+      KILL_SWITCH: ${KILL_SWITCH:-false}
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

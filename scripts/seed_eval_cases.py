@@ -32,12 +32,12 @@ def course_cases() -> list[dict[str, object]]:
                 {
                     "question": f"What is the tuition for {name}?",
                     "expect": {"chunk_keys": [f"{base}#facts"], "link_keys": [base]},
-                    "tags": ["automatic", "fee"],
+                    "tags": ["zzdrill-eval", "automatic", "fee"],
                 },
                 {
                     "question": f"How long does {name} take?",
                     "expect": {"chunk_keys": [f"{base}#facts"], "link_keys": [base]},
-                    "tags": ["automatic", "duration"],
+                    "tags": ["zzdrill-eval", "automatic", "duration"],
                 },
                 {
                     "question": f"How do I apply for {name}?",
@@ -45,7 +45,7 @@ def course_cases() -> list[dict[str, object]]:
                         "chunk_keys": [f"{base}#facts"],
                         "link_keys": [f"{base}", "apply:general"],
                     },
-                    "tags": ["automatic", "apply"],
+                    "tags": ["zzdrill-eval", "automatic", "apply"],
                 },
             ]
         )
@@ -97,7 +97,7 @@ def handwritten_cases() -> list[dict[str, object]]:
         {
             "question": question,
             "expect": {"chunk_keys": [], "link_keys": []},
-            "tags": ["handwritten", *tags],
+            "tags": ["zzdrill-eval", "handwritten", *tags],
         }
         for question, tags in questions
     ]
@@ -153,7 +153,7 @@ def adversarial_cases() -> list[dict[str, object]]:
             {
                 "question": question,
                 "expect": {"answer": "not_sure"},
-                "tags": ["off_topic"],
+                "tags": ["zzdrill-eval", "off_topic"],
             }
             for question in off_topic
         ],
@@ -161,7 +161,7 @@ def adversarial_cases() -> list[dict[str, object]]:
             {
                 "question": question,
                 "expect": {"answer": "refuse"},
-                "tags": ["injection"],
+                "tags": ["zzdrill-eval", "injection"],
             }
             for question in injection
         ],

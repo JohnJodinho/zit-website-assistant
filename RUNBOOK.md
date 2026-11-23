@@ -47,7 +47,7 @@ Do not include raw API keys, database URLs, DSNs or passwords in tickets, chat, 
 - Migration `0002_phase2_content` is applied and verified on the shared Supabase project.
 - The configured `DATABASE_URL` uses transaction-pooler mode (port 6543); two initial staging attempts lost their connection and rolled back cleanly. The successful stage used Supabase session-pooler mode (port 5432). Before future long-running admin staging, configure `DATABASE_URL` privately for session-pooler mode or a reachable direct connection. Do not paste the URL in chat or logs.
 - Release checks validate links, chunk limits, required links, and normalized 768-dimensional BGE vectors. Snapshot reload validates the active published release before atomically replacing the in-memory snapshot.
-- Publish and rollback remain blocked until Phase 3 search evaluation is implemented and passes. The public chat endpoint is absent.
+- Publish and rollback require passing search evaluation. The public chat endpoint is protected by rollout and kill-switch settings.
 - Do not create a test database or run write-based tests against the shared Supabase project. Automated Phase 2 tests use database-free validation and mocked provider responses.
 
 ## Later Render deployment

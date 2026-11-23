@@ -1,6 +1,6 @@
 # ZIT Website Assistant API
 
-This repository contains the FastAPI foundation for the ZIT website assistant. It uses Supabase PostgreSQL for durable application data and Alembic for schema changes. The backend does not call Gemini or Groq during Phase 1.
+This repository contains the FastAPI foundation for the ZIT website assistant. It uses Supabase PostgreSQL for durable application data and Alembic for schema changes. The backend supports direct Gemini and Groq generation adapters behind the free-only model configuration.
 
 ## Local setup
 
@@ -39,9 +39,7 @@ BGE embedding service. The owner approved the initial stage: one validated draft
 documents, 274 unique chunks, 114 links, and 274 BGE embeddings is in the shared Supabase project.
 No release has been published.
 
-Release data checks and snapshot loading are implemented. Publish and rollback return
-`search_evaluation_unavailable` until Phase 3 supplies and passes search evaluation. Public chat is
-not implemented or enabled.
+Release data checks and snapshot loading are implemented. Publish and rollback require a passing search evaluation. Public chat is implemented behind rollout and kill-switch settings.
 
 Migration `0002_phase2_content` is applied to the shared Supabase project. For future long-running
 ETL staging, use a Supabase session-pooler connection (port 5432) or a reachable direct connection

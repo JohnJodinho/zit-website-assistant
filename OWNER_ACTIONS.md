@@ -20,8 +20,8 @@ Order matters. Do the parts in order.
 Never reuse your development secrets in production.
 
 1. **Google and Groq keys:** In Google AI Studio, create a new key for a project with billing off. Do the same in Groq. Save both in your password manager. Delete the old development keys.
-2. **Session secret (`SESSION_PEPPER`):** Run `<command from deploy/ENV_PRODUCTION.md>`. Save the result in your password manager.
-3. **Admin key:** Your admin key is already in your password manager. If you want a fresh one for production, run `<command>` and follow `RUNBOOK.md` section `<name>`.
+2. **Session secret (`SESSION_PEPPER`):** Run the command in `deploy/ENV_PRODUCTION.md`. Save the result in your password manager.
+3. **Admin key:** Your admin key is already in your password manager. If you want a fresh one for production, run `python -m app.security.keys generate` and follow the Admin key setup section in `RUNBOOK.md`.
 4. **Admin docs login (optional):** Only if you want the admin web page (`/admin/docs`). Pick a username and a long password. Otherwise leave it off.
 
 You will paste these into Render in Part 5. Do not send them in chat.
@@ -40,7 +40,7 @@ Turnstile is the check that stops bots from opening chats.
 Skip this if you want. The assistant works without it. You will just not get phone alerts.
 
 1. In Telegram, message `@BotFather` and create a bot. Copy the token.
-2. Send any message to your new bot. Then find your chat id using `<steps from RUNBOOK.md>`.
+2. Send any message to your new bot. Then find your chat id using the Telegram Bot API getUpdates response.
 3. You will add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in Render.
 
 ## Part 5. Create the backend on Render
@@ -62,7 +62,7 @@ Skip this if you want. The assistant works without it. You will just not get pho
    - `ROLLOUT_PERCENT=0` (nobody sees the chat yet, which is correct)
    - `WIDGET_ORIGINS` and `FRAME_ANCESTORS`: leave a placeholder for now. You fill them in Part 7.
 8. Click **Create Web Service** and wait for the deploy.
-9. Open `https://<your-render-address>/api/v1/ready`. You should see that the database is reachable and a release is loaded.
+9. Open the deployed `/api/v1/ready` address in your browser. You should see that the database is reachable and a release is loaded.
 
 ## Part 6. Put the chat window on Vercel
 
@@ -80,7 +80,7 @@ Skip this if you want. The assistant works without it. You will just not get pho
 
 ## Part 8. Test it with the built-in checker
 
-1. Run: `python scripts/smoke_live.py --api <render-address> --widget <vercel-address>`
+1. Run: `python scripts/smoke_live.py --api <render-address> --widget <vercel-address>` replacing only the two address values.
 2. Every line should say PASS. If a line says FAIL, it prints a one-line fix hint. Fix it and run again.
 3. Then open the Vercel address in a browser on your phone and your laptop, ask three questions, and make sure answers appear word by word.
 
@@ -88,7 +88,7 @@ Skip this if you want. The assistant works without it. You will just not get pho
 
 1. Open `deploy/faqs_template.csv`. Fill one row per question. Write answers exactly as you want visitors to see them. Add 3 to 5 other ways people ask the same thing in the variants column.
 2. Upload them with the bulk call shown in `requests.http` (`POST /admin/v1/faqs/bulk`). If any row is wrong, nothing is saved and you get a list of the bad rows.
-3. Check the draft with the diff call. Then publish. `RUNBOOK.md` section `<name>` shows each call.
+3. Check the draft with the diff call in `requests.http`, then publish with the release route example.
 4. Ask each FAQ in the chat. It should answer instantly.
 
 ## Part 10. Ask the web team to add one line
@@ -106,8 +106,8 @@ Before they do it, you can test on the real site yourself by adding `?assistant=
 
 ## Part 12. Keep things safe and healthy
 
-- **Embedding Space:** Hugging Face free Spaces sleep. If yours sleeps, search stops working. Use a paid always-on option, or set up an uptime monitor that opens the Space address every few minutes. `<exact advice from build>`
-- **Uptime monitor:** Create a free monitor (for example UptimeRobot or Better Stack) that checks `https://<render-address>/api/v1/health` every 5 minutes and emails you.
+- **Embedding Space:** Hugging Face free Spaces sleep. If yours sleeps, search stops working. Use a paid always-on option or an uptime monitor that opens the Space address regularly.
+- **Uptime monitor:** Create a free monitor that checks `/api/v1/health` every 5 minutes and emails you.
 - **Sentry (optional):** Create a project, copy its DSN and set `SENTRY_DSN` in Render. Leave it as `placeholder` to keep it off.
 - **Backups:** Check what your Supabase plan includes. Free plans may not have daily backups. If not, run the backup steps in `RUNBOOK.md` weekly, and do one test restore before launch.
 - **Privacy notice:** Get the notice approved (the Nigeria Data Protection Act applies). Then set the privacy page address in `VITE_PRIVACY_URL` and redeploy the widget.
