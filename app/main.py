@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -26,6 +27,7 @@ from app.api.public.health import router as health_router
 from app.config import Settings, get_settings
 from app.content.snapshot import load_active_snapshot
 from app.db.session import create_database_engine, create_session_factory
+from app.db.models import IngestionRun
 from app.obs.instrumentation import instrument_application
 from app.obs.logging import configure_logging, get_logger
 from app.obs.sentry import initialize_sentry
@@ -54,6 +56,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if session_factory is not None:
             try:
                 async with session_factory() as session:
+                    await session.execute(
+                        update(IngestionRun)
+                        .where(IngestionRun.status == "running")
+                        .values(status="interrupted")
+                    )
+                    await session.commit()
                     application.state.active_snapshot = await load_active_snapshot(
                         session,
                         app_settings,

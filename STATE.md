@@ -1,8 +1,8 @@
 # STATE (updated 23 November 2026)
-Milestone: F0 Orientation   Status: done
+Milestone: F1 Finish Phase 2   Status: done
 Live provider calls used: 0/60
-Done: Read FINAL_STAGE.md and OWNER_INPUTS.md; baseline Ruff, mypy and 76 pytest results verified; session database URL is port 5432
-Next 3 actions: Complete F1 archive and lifecycle work; extend F1 gates; commit F1
-Open gates: P2-1 through P2-8, MIG-1
+Done: Existing Phase 2 importer, archive, embedding, snapshot and admin routes verified; startup now interrupts abandoned ingestion runs
+Next 3 actions: Build search and evaluation; implement real publish and rollback; publish approved release
+Open gates: SEARCH-1 through SEARCH-5, RELEASE-LIVE
 Blocked: none
-Last commit: pending
+Last commit: 9cea9c2 F0 milestone
