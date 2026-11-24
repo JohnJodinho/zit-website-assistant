@@ -68,7 +68,6 @@ async def test_generation_fails_over_before_first_content() -> None:
         providers,
         QuotaManager(),
         "A short prompt",
-        degraded_prompts=("Lean prompt", "Essential prompt"),
     )
 
     assert generation is not None
@@ -77,7 +76,7 @@ async def test_generation_fails_over_before_first_content() -> None:
     assert [failure.error_class for failure in failures] == ["unavailable"]
     assert providers["groq"].calls == 1
     assert providers["gemini"].calls == 1
-    assert providers["gemini"].prompts == ["Lean prompt"]
+    assert providers["gemini"].prompts == ["A short prompt"]
 
 
 async def test_generation_never_calls_models_without_both_free_flags() -> None:

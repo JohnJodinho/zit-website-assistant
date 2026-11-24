@@ -110,22 +110,6 @@ async def patch_setting(
     return {"key": key, "before": before, "value": body.value}
 
 
-@router.post("/cache/purge")
-async def purge_cache(
-    request: Request,
-    principal: Annotated[AdminPrincipal, Depends(require_scope(AdminScope.WRITE))],
-) -> dict[str, str]:
-    answer_cache = getattr(request.app.state, "answer_cache", None)
-    if answer_cache is not None:
-        answer_cache.clear()
-    embedding_cache = getattr(request.app.state, "query_embedding_cache", None)
-    clear_embedding_cache = getattr(embedding_cache, "clear", None)
-    if callable(clear_embedding_cache):
-        clear_embedding_cache()
-    del principal
-    return {"status": "purged"}
-
-
 @router.delete("/sessions/{session_id}")
 async def delete_session(
     session_id: str,

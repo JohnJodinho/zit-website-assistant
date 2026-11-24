@@ -1,19 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal
 
 from app.content.snapshot import SnapshotLink
 from app.search.hybrid import SearchHit
 
-_CONTEXT_LIMITS = {"normal": 1_800, "lean": 900, "essential": 450}
+_MAX_CONTEXT_TOKENS = 1_800
 
 
 def build_prompt(
     question: str,
     hits: Sequence[SearchHit],
     links: Sequence[SnapshotLink],
-    mode: Literal["normal", "lean", "essential"] = "normal",
 ) -> str:
     sections = [
         "You are the ZIT website assistant. Answer only from the public ZIT context below.",
@@ -27,7 +25,7 @@ def build_prompt(
             "the release date and ask the visitor to confirm with Admissions."
         ),
     ]
-    context = _bounded_context(hits, _CONTEXT_LIMITS[mode])
+    context = _bounded_context(hits)
     if context:
         sections.append(f"Public ZIT context:\n{context}")
     if links:
@@ -37,8 +35,8 @@ def build_prompt(
     return "\n\n".join(sections)
 
 
-def _bounded_context(hits: Sequence[SearchHit], max_tokens: int) -> str:
-    remaining = max_tokens
+def _bounded_context(hits: Sequence[SearchHit]) -> str:
+    remaining = _MAX_CONTEXT_TOKENS
     selected: list[str] = []
     for hit in hits:
         estimate = max(1, (len(hit.text) + 3) // 4)

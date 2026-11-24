@@ -34,9 +34,6 @@ class ChatPlan:
     hits: tuple[SearchHit, ...]
     degraded: bool
     confidence: dict[str, float]
-    query_vector: tuple[float, ...] | None = None
-    lean_prompt: str | None = None
-    essential_prompt: str | None = None
 
 
 async def prepare_chat_plan(
@@ -84,7 +81,6 @@ async def prepare_chat_plan(
             hits=top_hits,
             degraded=vector is None,
             confidence={"vector": best_vector, "bm25": best_bm25},
-            query_vector=vector,
         )
 
     return ChatPlan(
@@ -96,9 +92,6 @@ async def prepare_chat_plan(
         hits=top_hits,
         degraded=vector is None,
         confidence={"vector": best_vector, "bm25": best_bm25},
-        query_vector=vector,
-        lean_prompt=build_prompt(question, top_hits[:3], links, mode="lean"),
-        essential_prompt=build_prompt(question, top_hits[:2], links[:1], mode="essential"),
     )
 
 

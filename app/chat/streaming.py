@@ -55,9 +55,7 @@ async def stream_chat(
     if plan.answer is None and snapshot is not None:
         cached = cache.get(
             question,
-            plan.query_vector,
             snapshot.release_id,
-            frozenset(hit.chunk_key for hit in plan.hits),
         )
         if cached is not None and not answer_is_grounded(cached.answer, plan.hits, plan.links):
             cached = None
@@ -67,7 +65,7 @@ async def stream_chat(
             plan,
             trace_id,
             snapshot,
-            path=cached.match if cached is not None else None,
+            path=cached.path if cached is not None else None,
         ),
     )
     if cached is not None:
@@ -88,10 +86,6 @@ async def stream_chat(
             get_providers(request),
             quota,
             plan.prompt or "",
-            degraded_prompts=(
-                plan.lean_prompt or plan.prompt or "",
-                plan.essential_prompt or plan.lean_prompt or plan.prompt or "",
-            ),
         )
     )
     try:
@@ -166,8 +160,6 @@ async def stream_chat(
                         question,
                         full_answer,
                         snapshot.release_id,
-                        plan.query_vector,
-                        frozenset(hit.chunk_key for hit in plan.hits),
                         settings.session_cache_seconds,
                     )
                 yield "done", {"finish": "stop", "actions": [], "degraded": False}

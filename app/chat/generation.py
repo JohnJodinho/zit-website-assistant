@@ -47,19 +47,14 @@ async def begin_generation(
     providers: Mapping[str, StreamingProvider],
     quota: QuotaManager,
     prompt: str,
-    *,
-    degraded_prompts: tuple[str, ...] = (),
 ) -> tuple[Generation | None, list[AttemptFailure]]:
     models = eligible_models(settings.llm_models)[: settings.llm_max_attempts]
     deadline = monotonic() + settings.llm_pretoken_deadline_s
+    reserved_input = _estimate_tokens(prompt)
+    reserved_tokens = reserved_input + MAX_OUTPUT_TOKENS
     failures: list[AttemptFailure] = []
-    prompts = (prompt, *degraded_prompts)
-    attempt_count = 0
 
     for model in models:
-        attempt_prompt = prompts[min(attempt_count, len(prompts) - 1)]
-        reserved_input = _estimate_tokens(attempt_prompt)
-        reserved_tokens = reserved_input + MAX_OUTPUT_TOKENS
         provider = providers.get(model.provider)
         if provider is None or not quota.eligible(
             model.model_id,
@@ -74,13 +69,12 @@ async def begin_generation(
             continue
 
         quota.reserve(model.model_id, reserved_tokens)
-        attempt_count += 1
         started_at = datetime.now(UTC)
         started_clock = monotonic()
         usage: Usage | None = None
         stream = provider.stream(
             model=model.model_id,
-            prompt=attempt_prompt,
+            prompt=prompt,
             max_output_tokens=MAX_OUTPUT_TOKENS,
         )
         try:
