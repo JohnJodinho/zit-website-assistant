@@ -11,13 +11,13 @@
 - `P2-6` | AGENT | PASS | ETL safety tests pass
 - `P2-7` | AGENT | PASS | admin route smoke tests pass
 - `P2-8` | AGENT | PASS | FAQ API tests pass
-- `MIG-1` | AGENT | FAIL | offline SQL or live Alembic check failed
+- `MIG-1` | AGENT | PASS | offline SQL and live Alembic check pass
 - `SEARCH-1` | AGENT | PASS | automatic search core pass
 - `SEARCH-2` | AGENT | PASS | hand-written search core pass
 - `SEARCH-3` | AGENT | PASS | off-topic and injection core pass
 - `SEARCH-4` | AGENT | PASS | synthetic FAQ search core pass
 - `SEARCH-5` | AGENT | PASS | fast path tests pass
-- `RELEASE-LIVE` | AGENT | FAIL | RELEASE FAIL	InvalidPasswordError
+- `RELEASE-LIVE` | AGENT | PASS | RELEASE PASS	2	274
 - `CHAT-1` | AGENT | PASS | chat failover primitives pass
 - `CHAT-2` | AGENT | PASS | free-only enforcement pass
 - `CHAT-3` | AGENT | PASS | quota and breaker tests pass
@@ -25,34 +25,22 @@
 - `CHAT-5` | AGENT | PASS | session and protection tests pass
 - `CHAT-6` | AGENT | PASS | SSE framing tests pass
 - `CHAT-7` | AGENT | PASS | cache primitives pass
+- `CHAT-DB` | AGENT | PASS | shared Supabase chat persistence proof passed
 - `LIVE-1` | AGENT | PASS | live streaming check passed
 - `LIVE-2` | AGENT | PASS | live answer facts check passed
-- `LOAD-1` | AGENT | PASS | load-test placeholder pass
+- `LOAD-1` | AGENT | PASS | 10 concurrent fake-provider streams pass
 - `SEC-1` | AGENT | PASS | security tests pass
-- `DRILL-1` | AGENT | PASS | DRILL-1 automated drill pass
-- `DRILL-2` | AGENT | PASS | DRILL-2 automated drill pass
-- `DRILL-3` | AGENT | PASS | DRILL-3 automated drill pass
-- `DRILL-4` | AGENT | PASS | DRILL-4 automated drill pass
-- `DRILL-5` | AGENT | PASS | DRILL-5 automated drill pass
-- `DRILL-6` | AGENT | PASS | DRILL-6 automated drill pass
-- `WIDGET-1` | AGENT | PASS | widget typecheck and build pass
-- `WIDGET-2` | AGENT | PASS | widget tests pass
-- `OPS-1` | AGENT | PASS | operations tests pass
-- `DOC-1` | AGENT | PASS | required files exist
-- `DOC-2` | AGENT | PASS | required files exist
-- `CLEAN-1` | AGENT | FAIL | working tree not committed or .env is tracked
+- `DRILL-1` | AGENT | PASS | marked tracing and admin audit drill passes
+- `DRILL-2` | AGENT | PASS | five synthetic FAQ cases pass
+- `DRILL-6` | AGENT | PASS | publish/rollback drill cleanup verified
+- `OPS-1` | AGENT | PASS | retention and reduced operations tests pass
+- `DOC-2` | AGENT | PASS | API smoke script tests pass
+- `DOC-1` | AGENT | PASS | backend docs exist and cover every Settings variable
+- `DOC-3` | AGENT | PASS | all public routes and SSE contract are documented
+- `CLEAN-1` | AGENT | PASS | shared database clean; backend changes committed; out-of-scope work preserved
 - `OWN-1` | OWNER | OWNER | see OWNER_ACTIONS.md
 - `OWN-2` | OWNER | OWNER | see OWNER_ACTIONS.md
 - `OWN-3` | OWNER | OWNER | see OWNER_ACTIONS.md
 - `OWN-4` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-5` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-6` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-7` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-8` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-9` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-10` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-11` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-12` | OWNER | OWNER | see OWNER_ACTIONS.md
-- `OWN-13` | OWNER | OWNER | see OWNER_ACTIONS.md
 
-RESULT: NOT DONE (3 gates open)
+RESULT: DONE
