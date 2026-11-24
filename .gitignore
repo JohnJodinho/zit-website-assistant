@@ -3,6 +3,7 @@ etl/
 .github/instructions/
 .vscode
 .env
+.env.production
 etl/data/cleaned/
 etl/data/chunks/
 etl/data/chroma_db/
