@@ -102,7 +102,10 @@ class GeminiProvider:
                 usage = getattr(event, "usage_metadata", None)
                 if usage is not None:
                     prompt_tokens = getattr(usage, "prompt_token_count", 0) or 0
-                    response_tokens = getattr(usage, "response_token_count", 0) or 0
+                    response_tokens = getattr(usage, "response_token_count", None)
+                    if response_tokens is None:
+                        response_tokens = getattr(usage, "candidates_token_count", 0)
+                    response_tokens = response_tokens or 0
                     thought_tokens = getattr(usage, "thoughts_token_count", 0) or 0
                     yield (
                         "",

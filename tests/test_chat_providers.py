@@ -51,7 +51,7 @@ async def test_gemini_stream_hides_thoughts_and_reports_usage(monkeypatch) -> No
                 ],
                 usage_metadata=SimpleNamespace(
                     prompt_token_count=10,
-                    response_token_count=3,
+                    candidates_token_count=3,
                     thoughts_token_count=2,
                 ),
             )
