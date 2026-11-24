@@ -360,6 +360,20 @@ async def _verify_latest(factory: async_sessionmaker[AsyncSession]) -> tuple[int
         )
         if api_key is None or api_key.revoked_at is None:
             raise DrillFailure("publish_rollback_key_not_revoked")
+        unrevoked_keys = await session.scalar(
+            select(func.count())
+            .select_from(ApiKey)
+            .where(ApiKey.name.startswith("zzdrill-"), ApiKey.revoked_at.is_(None))
+        )
+        if unrevoked_keys:
+            raise DrillFailure("unrevoked_drill_key_exists")
+        live_overrides = await session.scalar(
+            select(func.count())
+            .select_from(Setting)
+            .where(Setting.key.in_({"KILL_SWITCH", "ROLLOUT_PERCENT", "MAINTENANCE_MESSAGE"}))
+        )
+        if live_overrides:
+            raise DrillFailure("live_setting_override_exists")
         drill_links = await session.scalar(
             select(func.count()).select_from(ReleaseLink).where(ReleaseLink.release_id == drill.id)
         )

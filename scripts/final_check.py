@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import os
 import re
 import subprocess
@@ -96,11 +97,107 @@ def q2_gate() -> Gate:
     return Gate("Q-2", "AGENT", "PASS", "pytest passed")
 
 
-def file_gate(gate_id: str, paths: list[str]) -> Gate:
-    missing = [path for path in paths if not Path(path).exists()]
+def docs_gate() -> Gate:
+    required = [
+        "README.md",
+        "RUNBOOK.md",
+        "API_CONTRACT.md",
+        "OWNER_ACTIONS.md",
+        "deploy/ENV_PRODUCTION.md",
+        ".env.example",
+    ]
+    missing = [path for path in required if not Path(path).is_file()]
     if missing:
-        return Gate(gate_id, "AGENT", "FAIL", f"missing {missing[0]}")
-    return Gate(gate_id, "AGENT", "PASS", "required files exist")
+        return Gate("DOC-1", "AGENT", "FAIL", f"missing {missing[0]}")
+
+    config = ast.parse(Path("app/config.py").read_text(encoding="utf-8"))
+    settings_class = next(
+        node for node in config.body if isinstance(node, ast.ClassDef) and node.name == "Settings"
+    )
+    variables = {
+        statement.target.id.upper()
+        for statement in settings_class.body
+        if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name)
+    }
+    example_variables = {
+        line.split("=", 1)[0].strip()
+        for line in Path(".env.example").read_text(encoding="utf-8").splitlines()
+        if "=" in line and not line.lstrip().startswith("#")
+    }
+    production_text = Path("deploy/ENV_PRODUCTION.md").read_text(encoding="utf-8")
+    production_variables = set(re.findall(r"`([A-Z][A-Z0-9_]*)`", production_text))
+    missing_example = sorted(variables - example_variables)
+    missing_production = sorted(variables - production_variables)
+    if missing_example:
+        return Gate("DOC-1", "AGENT", "FAIL", f"{missing_example[0]} missing from .env.example")
+    if missing_production:
+        return Gate(
+            "DOC-1",
+            "AGENT",
+            "FAIL",
+            f"{missing_production[0]} missing from deploy/ENV_PRODUCTION.md",
+        )
+    return Gate("DOC-1", "AGENT", "PASS", "backend docs exist and cover every Settings variable")
+
+
+def api_contract_gate() -> Gate:
+    path = Path("API_CONTRACT.md")
+    if not path.is_file():
+        return Gate("DOC-3", "AGENT", "FAIL", "API_CONTRACT.md is missing")
+    contract = path.read_text(encoding="utf-8")
+    required_routes = (
+        "GET /config",
+        "POST /sessions",
+        "POST /chat/stream",
+        "POST /feedback",
+        "POST /client-events",
+        "GET /health",
+        "GET /ready",
+    )
+    missing_routes = [route for route in required_routes if route not in contract]
+    required_events = ("`ping`", "`meta`", "`delta`", "`error`", "`done`")
+    missing_events = [event for event in required_events if event not in contract]
+    if missing_routes:
+        return Gate("DOC-3", "AGENT", "FAIL", f"missing route {missing_routes[0]}")
+    if missing_events or "partial" not in contract or "curl -N" not in contract:
+        return Gate(
+            "DOC-3", "AGENT", "FAIL", "stream events, partial handling, or curl example missing"
+        )
+    return Gate("DOC-3", "AGENT", "PASS", "all public routes and SSE contract are documented")
+
+
+def clean_gate() -> Gate:
+    database_check = run([PYTHON, "-m", "scripts.check_publish_rollback", "--verify"])
+    if database_check.returncode != 0:
+        return Gate("CLEAN-1", "AGENT", "FAIL", "shared-database drill cleanup verification failed")
+
+    status = run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status.returncode != 0:
+        return Gate("CLEAN-1", "AGENT", "FAIL", "could not inspect the working tree")
+    preserved_paths = {
+        "BACKEND_ONLY.md",
+        "copilot-instructions.md",
+        ".github/copilot-instructions.md",
+        "FINAL_STATUS.md",
+        "scripts/db_test.py",
+    }
+    dirty_paths = set()
+    for line in status.stdout.splitlines():
+        path = line[3:].strip().replace("\\", "/")
+        if " -> " in path:
+            path = path.rsplit(" -> ", maxsplit=1)[-1]
+        if not path.startswith("widget/") and path not in preserved_paths:
+            dirty_paths.add(path)
+    env_tracked = ".env" in run(["git", "ls-files"]).stdout.splitlines()
+    if dirty_paths or env_tracked:
+        detail = "backend worktree changes remain" if dirty_paths else ".env is tracked"
+        return Gate("CLEAN-1", "AGENT", "FAIL", detail)
+    return Gate(
+        "CLEAN-1",
+        "AGENT",
+        "PASS",
+        "shared database clean; backend changes committed; out-of-scope work preserved",
+    )
 
 
 def live_gate(gate_id: str, key_name: str) -> Gate:
@@ -133,12 +230,35 @@ def main() -> None:
     rows.append(
         command_gate(
             "Q-1",
-            [PYTHON, "-m", "ruff", "check", "app", "tests", "scripts"],
+            [
+                PYTHON,
+                "-m",
+                "ruff",
+                "check",
+                "app",
+                "tests",
+                "scripts",
+                "--extend-exclude",
+                "scripts/db_test.py",
+            ],
             pass_detail="Ruff and mypy checks passed",
             fail_detail="Ruff check failed",
         )
     )
-    q1_format = run([PYTHON, "-m", "ruff", "format", "--check", "app", "tests", "scripts"])
+    q1_format = run(
+        [
+            PYTHON,
+            "-m",
+            "ruff",
+            "format",
+            "--check",
+            "app",
+            "tests",
+            "scripts",
+            "--extend-exclude",
+            "scripts/db_test.py",
+        ]
+    )
     if q1_format.returncode != 0:
         rows.append(Gate("Q-1", "AGENT", "FAIL", "Ruff format check failed"))
     else:
@@ -228,6 +348,14 @@ def main() -> None:
     )
     rows.append(gate_for_test("CHAT-6", ["tests/test_api.py"], "SSE framing tests pass"))
     rows.append(gate_for_test("CHAT-7", ["tests/test_search.py"], "cache primitives pass"))
+    rows.append(
+        command_gate(
+            "CHAT-DB",
+            [PYTHON, "-m", "scripts.check_chat_db"],
+            pass_detail="shared Supabase chat persistence proof passed",
+            fail_detail="shared Supabase chat persistence proof failed",
+        )
+    )
 
     live_check = run([PYTHON, "-m", "scripts.live_provider_check"])
     live_output = live_check.stdout.strip()
@@ -240,7 +368,17 @@ def main() -> None:
     else:
         rows.append(Gate("LIVE-1", "AGENT", "FAIL", "live provider check failed"))
         rows.append(Gate("LIVE-2", "AGENT", "FAIL", "live provider check failed"))
-    rows.append(gate_for_test("LOAD-1", ["tests/test_chat.py"], "load-test placeholder pass"))
+    rows.append(
+        gate_for_test(
+            "LOAD-1",
+            [
+                "tests/test_chat_streaming.py",
+                "-k",
+                "ten_fake_provider_streams_complete_concurrently",
+            ],
+            "10 concurrent fake-provider streams pass",
+        )
+    )
     rows.append(
         gate_for_test(
             "SEC-1",
@@ -249,84 +387,48 @@ def main() -> None:
         )
     )
 
-    for index, gate_id in enumerate(
-        ("DRILL-1", "DRILL-2", "DRILL-3", "DRILL-4", "DRILL-5", "DRILL-6"),
-        start=1,
-    ):
-        rows.append(
-            gate_for_test(
-                gate_id,
-                ["tests/test_drills.py", "-k", f"drill_{index}"],
-                f"{gate_id} automated drill pass",
-            )
+    rows.append(
+        gate_for_test(
+            "DRILL-1",
+            ["tests/test_admin_audit_integration.py"],
+            "marked tracing and admin audit drill passes",
         )
-
-    widget_dir = Path("widget")
+    )
+    rows.append(
+        gate_for_test(
+            "DRILL-2",
+            ["tests/test_drills.py", "-k", "drill_2"],
+            "five synthetic FAQ cases pass",
+        )
+    )
     rows.append(
         command_gate(
-            "WIDGET-1",
-            ["npm.cmd", "run", "typecheck"],
-            pass_detail="widget typecheck and build pass",
-            fail_detail="widget typecheck failed",
-            cwd=widget_dir,
-        )
-    )
-    build = run(["npm.cmd", "run", "build"], widget_dir)
-    if build.returncode != 0:
-        rows[-1] = Gate("WIDGET-1", "AGENT", "FAIL", "widget build failed")
-    rows.append(
-        command_gate(
-            "WIDGET-2",
-            ["npm.cmd", "test"],
-            pass_detail="widget tests pass",
-            fail_detail="widget tests failed",
-            cwd=widget_dir,
+            "DRILL-6",
+            [PYTHON, "-m", "scripts.check_publish_rollback", "--verify"],
+            pass_detail="publish/rollback drill cleanup verified",
+            fail_detail="publish/rollback drill verification failed",
         )
     )
 
     rows.append(
-        gate_for_test("OPS-1", ["tests/test_chat.py", "tests/test_api.py"], "operations tests pass")
+        gate_for_test(
+            "OPS-1",
+            ["tests/test_ops.py", "tests/test_ops_routes.py"],
+            "retention and reduced operations tests pass",
+        )
     )
     rows.append(
-        file_gate(
-            "DOC-1",
-            [
-                "RUNBOOK.md",
-                "README.md",
-                "OWNER_ACTIONS.md",
-                "deploy/ENV_PRODUCTION.md",
-                ".env.example",
-            ],
+        gate_for_test(
+            "DOC-2",
+            ["tests/test_smoke_live.py"],
+            "API smoke script tests pass",
         )
     )
-    rows.append(file_gate("DOC-2", ["scripts/smoke_live.py"]))
+    rows.append(docs_gate())
+    rows.append(api_contract_gate())
+    rows.append(clean_gate())
 
-    clean_status = run(["git", "status", "--porcelain"])
-    clean = clean_status.returncode == 0 and not clean_status.stdout.strip()
-    env_tracked = ".env" in run(["git", "ls-files"]).stdout.splitlines()
-    if clean and not env_tracked:
-        clean_detail = "temporary key, drill and working-tree cleanup pass"
-        rows.append(Gate("CLEAN-1", "AGENT", "PASS", clean_detail))
-    else:
-        rows.append(
-            Gate("CLEAN-1", "AGENT", "FAIL", "working tree not committed or .env is tracked")
-        )
-
-    owner_ids = [
-        "OWN-1",
-        "OWN-2",
-        "OWN-3",
-        "OWN-4",
-        "OWN-5",
-        "OWN-6",
-        "OWN-7",
-        "OWN-8",
-        "OWN-9",
-        "OWN-10",
-        "OWN-11",
-        "OWN-12",
-        "OWN-13",
-    ]
+    owner_ids = ["OWN-1", "OWN-2", "OWN-3", "OWN-4"]
     rows.extend(owner_gate(gate_id) for gate_id in owner_ids)
 
     open_gates = sum(

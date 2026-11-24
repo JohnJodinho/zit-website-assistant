@@ -1,77 +1,75 @@
 # ZIT Website Assistant API
 
-This repository contains the FastAPI foundation for the ZIT website assistant. It uses Supabase PostgreSQL for durable application data and Alembic for schema changes. The backend supports direct Gemini and Groq generation adapters behind the free-only model configuration.
+The project is a FastAPI backend for ZIT's website assistant. It uses the
+shared Supabase PostgreSQL database for sessions, content, and telemetry. The
+active content is release 2 with 274 chunks. Search embeddings use the
+configured BGE 768-dimensional embedding service; text generation uses the
+configured free-only Gemini/Groq model chain.
 
 ## Local setup
 
-1. Use Python 3.12.
-2. Create and activate a virtual environment.
-3. Install dependencies with `python -m pip install -r requirements-dev.txt`.
-4. Copy `.env.example` to `.env` and set `DATABASE_URL` to the already-created development Supabase project. Never commit `.env`.
-5. Before changing the database, run the documented read-only checks in `RUNBOOK.md`.
-6. Apply the migration with `python -m alembic upgrade head`.
-7. Start the API with `python -m uvicorn app.main:app --reload`.
+1. Use Python 3.12 and create a virtual environment.
+2. Install dependencies with `python -m pip install -r requirements-dev.txt`.
+3. Copy `.env.example` to `.env`. Set the existing `DATABASE_URL` privately;
+   never create or use a separate test database. Set `SESSION_PEPPER` for
+   public sessions and configure the embedding and model credentials needed
+   for the checks you intend to run.
+4. Apply migrations with `python -m alembic upgrade head` only when the schema
+   needs an upgrade.
+5. Start the API with `python -m uvicorn app.main:app --reload`.
 
-The health endpoint is `GET /api/v1/health`. Readiness is `GET /api/v1/ready` and reports the database, migration, telemetry queue and unpublished-release state.
+The health endpoint is `GET /api/v1/health`. Readiness is
+`GET /api/v1/ready`. Public request and streaming formats are documented in
+[API_CONTRACT.md](./API_CONTRACT.md).
 
-## Phase 2 local content dry-run
+## Content and chat
 
-With the approved crawl and frontend source available at their default paths under `misc/`, run:
+`python -m app.content.cli dry-run` previews the local approved content input.
+It does not write to the database or call the embedding service. Staging and
+publishing are protected admin operations; review the current release and
+search evaluation before changing live content. The importer validates
+manifests, archive paths and limits, required source data, and 768-dimensional
+BGE embeddings.
 
-```powershell
-python -m app.content.cli dry-run
-```
-
-This reads the local crawl and supporting JSON, reports course chunks and source counts, and makes
-no database writes or embedding requests. It is a preview only; review the output before approving
-any future content staging.
-
-The importer verifies the approved crawl ID, manifest counts, direct Markdown, and both supporting
-course JSON sources. It ignores query-page artifacts, reports source conflicts, fills only missing
-crawl fields when the JSON sources agree, and preserves unknown course sections as chunks.
-
-## Phase 2 content operations
-
-Admin ETL and content APIs are protected by the existing bearer API keys. For upload examples, see
-[requests.http](./requests.http). The bounded ZIP must contain the approved crawl export and both
-approved website JSON files. `dry_run` is read-only. `stage` writes a draft and calls the configured
-BGE embedding service. The owner approved the initial stage: one validated draft containing 65
-documents, 274 unique chunks, 114 links, and 274 BGE embeddings is in the shared Supabase project.
-No release has been published.
-
-Release data checks and snapshot loading are implemented. Publish and rollback require a passing search evaluation. Public chat is implemented behind rollout and kill-switch settings.
-
-Migration `0002_phase2_content` is applied to the shared Supabase project. For future long-running
-ETL staging, use a Supabase session-pooler connection (port 5432) or a reachable direct connection
-for `DATABASE_URL`; transaction-pooler mode (port 6543) dropped connections during staging.
-Keep the connection URL private.
+The public API creates expiring sessions, streams answers over SSE, accepts
+feedback, and records supported client events. The backend applies rate limits,
+best-effort PII masking, free-model quota controls, provider failover, an
+exact-match answer cache, rollout controls, and a kill switch. PII masking is
+best effort; clients should not send personal or confidential information.
 
 ## Admin key setup
 
-After migrations are complete, run `python -m app.security.keys generate` in a private local terminal. Save the displayed raw key in the owner's password manager, and put only its displayed SHA-256 hash in `ADMIN_BOOTSTRAP_KEY_HASH`. Then run `python -m app.security.keys bootstrap`. The raw key is never stored in PostgreSQL. Do not send it in chat, commit it, or copy it to logs.
+Run `python -m app.security.keys generate` in a private terminal. Keep the raw
+key in a password manager and put only its displayed hash in
+`ADMIN_BOOTSTRAP_KEY_HASH` before running
+`python -m app.security.keys bootstrap`. The raw key is returned only once.
+Never put it in chat, logs, or tracked files. Admin docs are disabled unless
+`PUBLIC_DOCS_ENABLED=true` and both admin docs credentials are configured.
 
-Admin API keys can later be created and revoked under `/admin/v1/api-keys`. A newly created key is returned only in that one creation response. Admin docs are off unless `PUBLIC_DOCS_ENABLED=true` and both `ADMIN_DOCS_USERNAME` and `ADMIN_DOCS_PASSWORD` are configured.
-
-## Checks
+## Validation
 
 ```powershell
-python -m ruff check app tests
-python -m ruff format --check app tests
+python -m ruff check app tests scripts
+python -m ruff format --check app tests scripts
 python -m mypy app
 python -m pytest
+python scripts/final_check.py
 ```
 
-The normal test suite needs neither AI credentials nor a database. The optional Phase 1
-PostgreSQL audit integration test runs only when `PHASE1_TEST_DATABASE_URL` is set. You do not
-need to create a test database; leave this unset when no isolated disposable database is
-available. Do not point that test at the shared development database that will later serve
-production.
+The PostgreSQL integration test uses the configured `DATABASE_URL` and is
+marked with `zzdrill-` data. It cleans its temporary keys and traces while
+retaining immutable audit records. Run it only with `ENV=dev` and the
+authorized shared Supabase project configured; it refuses `ENV=prod`. The
+suite does not make live AI-provider calls.
 
-The `assistant` database schema is private: `anon` and `authenticated` have no schema access.
-The website should call this backend, not query Supabase tables directly. No owner action is
-needed for RLS while the schema remains private. If a future design exposes these tables
-through Supabase's Data API, first add and test table grants and row-level security policies
-that match that access model.
+## Database and operations
 
-Render deployment and Docker image validation are deferred. GitHub Actions runs lint, type
-checks, and tests; it does not build a Docker image.
+Application data lives in the private `assistant` schema. The website client
+must use this API rather than query Supabase tables directly. Keep the schema
+private; any future Data API exposure requires explicit grants and tested
+row-level security policies.
+
+For production environment values and backend operations, see
+[deploy/ENV_PRODUCTION.md](./deploy/ENV_PRODUCTION.md) and
+[RUNBOOK.md](./RUNBOOK.md). Owner-operated deployment, FAQ, and rollout steps
+are in [OWNER_ACTIONS.md](./OWNER_ACTIONS.md).

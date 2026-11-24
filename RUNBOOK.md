@@ -1,55 +1,153 @@
-# Phase 1 runbook
+# Backend runbook
 
-## Current status
+## Database safety
 
-- Phase 1 foundation is implemented and verified locally and against the development database.
-- Do not deploy to Render yet; deployment is deferred to its later phase.
-- Use the already-created Supabase project and its configured region.
-- The GitHub repository exists. Its first GitHub Actions run passed lint, types, and tests.
-- Docker image validation is deferred at the owner's request.
-- AI provider calls are not used by the Phase 1 app or tests.
-- `SENTRY_DSN=placeholder` disables Sentry. Configure a real DSN only after creating the Sentry project and following the separate setup guide.
-- The separate Sentry setup guide is maintained in the local planning materials.
+Use the existing Supabase project configured in `.env` as the shared
+development/production database. Never create a test database, point tests at a
+different database, downgrade the shared database, or delete real content,
+release history, audit records, or the owner's admin key.
 
-## Database migration reference
+Before a migration or database drill:
 
-Migration `0001_foundation` has been applied to the development Supabase project. For a new environment, confirm these read-only facts before migrating:
+1. Confirm privately that `ENV=dev` and `DATABASE_URL` is the authorized
+   Supabase connection. Never print or paste the URL.
+2. Read the migration and its offline SQL before applying it.
+3. Record the active release and chunk count in `STATE.md`.
+4. Prefix temporary drill data with `zzdrill-`. Afterward, verify the baseline
+   release and count, revoke temporary keys, archive drill releases, and retain
+   audit rows.
 
-1. Database server version and current database identity.
-2. Whether `vector` and `pgcrypto` are installed, and which schema contains them.
-3. Whether the `assistant` schema or any `assistant` tables already exist.
-4. Whether an Alembic version table or history already exists.
-5. Whether the `assistant` schema is private and not exposed through the Supabase Data API; verify schema exposure and grants.
+The application uses the private `assistant` schema. The Alembic version is
+stored in `public.alembic_version`. Keep the schema private and do not expose
+its tables through Supabase's Data API.
 
-If `assistant` contains data or an unknown migration history, stop. Do not drop or overwrite it.
+## Install, migrate, and run
 
-The app URL and migration URL may be configured separately. The app uses `DATABASE_URL`; Alembic uses `DATABASE_URL_DIRECT` when set and otherwise falls back to `DATABASE_URL`. Supabase endpoints use asyncpg's `ssl=require` mode by default: traffic is encrypted without requiring a separate certificate file. For certificate and hostname verification, set `sslmode=verify-full` and, if needed, point `DATABASE_SSL_ROOT_CERT` to the root CA downloaded from the Supabase Dashboard. Do not use unencrypted database connections. Percent-encode reserved characters in the database password when placing it in a URL; keep the URL private and never paste it into chat or logs.
+Use Python 3.12. Install with:
 
-## Admin key bootstrap
+```powershell
+python -m pip install -r requirements-dev.txt
+```
 
-Run the local generation command in a private terminal, record the raw key in the owner's password manager, and put only its hash in `ADMIN_BOOTSTRAP_KEY_HASH`. Apply migrations first, then run `python -m app.security.keys bootstrap`. The bootstrap operation refuses to add a key if any API key already exists.
+Copy `.env.example` to `.env` and set the existing `DATABASE_URL` privately.
+Configure `SESSION_PEPPER` for sessions, and the BGE/model credentials for
+features that need them. Never commit `.env` or paste any of its values into
+logs or chat.
 
-Do not include raw API keys, database URLs, DSNs or passwords in tickets, chat, logs, screenshots or the repository.
+Review current migration state:
 
-## Readiness and diagnostics
+```powershell
+python -m alembic current
+python -m alembic check
+```
 
-- `/api/v1/health` is liveness only and does not check the database.
-- `/api/v1/ready` returns 503 until the database is reachable and the current migration is applied. It also reports telemetry queue/drop counts and whether an active content release is loaded.
-- Every HTTP response includes `X-Request-ID`. The request trace and HTTP span are written asynchronously to PostgreSQL when the database is ready.
-- Sentry remains off while the DSN is blank or `placeholder`.
+Generate and review SQL before applying a migration:
 
-## Phase 2 content operations
+```powershell
+python -m alembic upgrade head --sql
+python -m alembic upgrade head
+```
 
-- The local importer uses only `misc/export-90e627d02de849b28ffe2ae9996a12ca/` and the approved `misc/zit-website/` course JSON files.
-- The API upload is a bounded ZIP containing the crawl export plus both `courses.json` and `website-content.json`. It validates the crawl ID, manifest counts, paths, encoding, and archive limits before processing.
-- `python -m app.content.cli dry-run` is local and read-only; it does not call the embedding provider or access Supabase.
-- The owner approved the initial stage. Draft release 3 contains 65 documents, 274 unique chunks, 114 links, and 274 validated BGE embeddings. It is not published.
-- Migration `0002_phase2_content` is applied and verified on the shared Supabase project.
-- The configured `DATABASE_URL` uses transaction-pooler mode (port 6543); two initial staging attempts lost their connection and rolled back cleanly. The successful stage used Supabase session-pooler mode (port 5432). Before future long-running admin staging, configure `DATABASE_URL` privately for session-pooler mode or a reachable direct connection. Do not paste the URL in chat or logs.
-- Release checks validate links, chunk limits, required links, and normalized 768-dimensional BGE vectors. Snapshot reload validates the active published release before atomically replacing the in-memory snapshot.
-- Publish and rollback require passing search evaluation. The public chat endpoint is protected by rollout and kill-switch settings.
-- Do not create a test database or run write-based tests against the shared Supabase project. Automated Phase 2 tests use database-free validation and mocked provider responses.
+Do not run a downgrade on the shared database. Start the API locally with:
 
-## Later Render deployment
+```powershell
+python -m uvicorn app.main:app --reload
+```
 
-Deployment is deferred until the deployment stage starts. At that time, configure production secrets in Render, use the exact widget origins, apply Alembic migrations with the direct connection before switching traffic, and verify health, readiness, request tracing, logs and rollback instructions. Never store secrets in GitHub workflow files.
+## Content releases
+
+Preview local approved content without database writes or embedding requests:
+
+```powershell
+python -m app.content.cli dry-run
+```
+
+Review the preview and current release before staging through the admin API.
+Staging uses the configured BGE 768-dimensional embedding service and creates
+a draft; publishing requires the release validation and search evaluation to
+pass. Check live release data read-only with:
+
+```powershell
+python -m scripts.check_release_live
+```
+
+The currently verified baseline is published release 2 with 274 chunks. Do
+not assume a future release is correct from its ID alone; verify its content,
+search results, and rollback path before publishing.
+
+## Public chat
+
+See [API_CONTRACT.md](./API_CONTRACT.md) for all public routes, JSON bodies,
+error codes, and SSE event handling. Chat is disabled when rollout is zero or
+the kill switch is active. Sessions expire after 30 minutes by default.
+`TURNSTILE_ENABLED` defaults to `false`; when enabled, the server requires a
+valid verification token and configured secret.
+
+Text is masked for common PII patterns before provider calls, but masking is
+best effort. Do not send personal or confidential data. Only free-confirmed
+models should be enabled in `LLM_MODELS`; unknown quotas are not unlimited.
+When every provider is unavailable, the service returns its fixed contact
+reply.
+
+## Health, traces, and routine checks
+
+- `GET /api/v1/health` is liveness only.
+- `GET /api/v1/ready` checks database connectivity, migration state, and
+  snapshot readiness.
+- Responses include `X-Request-ID`. Use it to find a trace through the
+  authorized admin trace API.
+- The application flushes telemetry asynchronously. Do not delete audit rows.
+- Expired sessions are removed by the in-process nightly retention worker at
+  02:00 UTC. The worker is stopped cleanly during application shutdown.
+
+With the local API running and chat enabled, check the API and exact CORS
+origin:
+
+```powershell
+python scripts/smoke_live.py --api http://127.0.0.1:8000 --origin http://localhost:5173
+```
+
+This script checks health, readiness, config/CORS, session creation, and a
+complete chat stream. It sends a session request without a Turnstile token, so
+keep Turnstile disabled for this local smoke check.
+
+## Tests and checks
+
+```powershell
+python -m ruff check app tests scripts
+python -m ruff format --check app tests scripts
+python -m mypy app
+python -m pytest
+python scripts/final_check.py
+```
+
+The PostgreSQL integration test uses the configured shared `DATABASE_URL`,
+refuses `ENV=prod`, and creates marked temporary rows. It removes its temporary
+keys and traces but keeps immutable audit records. Do not run that test against
+an unauthorized database. Unit and fake-provider tests do not call AI
+providers.
+
+The marked publish/rollback drill has already run and been verified. Its
+read-only verification command is:
+
+```powershell
+python -m scripts.check_publish_rollback --verify
+```
+
+Do not rerun the publishing drill unless deliberately repeating an approved
+database drill with a fresh baseline recorded in `STATE.md`.
+
+## Common failures
+
+| Symptom | First check |
+|---|---|
+| `/ready` returns 503 | Check `DATABASE_URL`, migration state, and active release; do not print the connection URL. |
+| Session creation returns 503 | Check `SESSION_PEPPER` and database readiness. |
+| Chat returns `assistant_not_available` | Check `ROLLOUT_PERCENT` and `KILL_SWITCH`. |
+| Chat returns `assistant_not_in_rollout` | The request is outside the configured rollout percentage. |
+| Chat returns `session_required` | Create a session and send its token in the chat JSON body. |
+| Chat returns 429 | Respect the session/chat rate limit; do not retry in a tight loop. |
+| Stream ends with an `error` event | Treat earlier deltas as partial; use the event code and request ID for diagnosis. |
+| Search has no usable results | Check the active release and BGE embedding service readiness. |
+| Admin request returns 401/403 | Check the key's validity and required scope; never expose the raw key. |
+| CORS check fails | Set the exact browser origin in `WIDGET_ORIGINS`; wildcard origins are rejected. |
