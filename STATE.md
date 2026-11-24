@@ -1,8 +1,8 @@
-# STATE (updated 23 November 2026 15:23)
-Milestone: F6 Closeout   Status: in progress
-Live provider calls used: 2/60
-Done: Shared Supabase migration is at 0002_phase2_content; Alembic live check passes. Published approved release 2; 274/274 chunks have BGE vectors, no synthetic docs, and /ready reports loaded. All 215 active search cases pass: retrieval 1.0, link hit 1.0, off-topic/injection refusal 1.0, wrong refusal 0. No active zzdrill eval cases or live setting overrides remain; temporary admin key is revoked. Parser dry-run reports 65 documents and 274 chunks.
-Next 3 actions: Complete real chat and remaining F3/F5 behavior; replace placeholder final-check gates with evidence-backed checks; run final suite, cleanup, commit, and exact final_check.
-Open gates: CHAT/LIVE/LOAD/DRILL/WIDGET/OPS/DOC/CLEAN acceptance evidence
+# STATE (updated 24 November 2026 02:25)
+Milestone: Backend-only step 1   Status: in progress
+Live provider calls used: 2/20
+Done: F0-F2 recorded previously; published release 2 and search gates recorded in prior state. Current full validation: 119 passed, 1 skipped (isolated-database integration test); Ruff and mypy pass; format issue fixed and rechecked. `.env` is not tracked.
+Next 3 actions: Finish reduced F3 chat requirements and tests; run the required shared-Supabase CHAT-DB proof and one Groq plus one Gemini smoke call; finish reduced F5/F6 and make final_check print RESULT: DONE.
+Open gates: CHAT-backend/CHAT-DB/LIVE/LOAD/DRILL/OPS/DOC/CLEAN; replace removed frontend-related gates per BACKEND_ONLY.md.
 Blocked: none
-Last commit: af7f45a Complete F6 closeout gate report
+Last commit: a830056 Stabilize staging and publish validated search release

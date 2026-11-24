@@ -51,3 +51,15 @@ def test_admin_docs_require_both_credentials_when_enabled() -> None:
     )
 
     assert settings.public_docs_enabled is True
+
+
+def test_turnstile_requires_a_secret_when_enabled() -> None:
+    with pytest.raises(ValidationError, match="TURNSTILE_SECRET is required"):
+        Settings(_env_file=None, turnstile_enabled=True)
+
+    settings = Settings(
+        _env_file=None,
+        turnstile_enabled=True,
+        turnstile_secret=SecretStr("test-secret"),
+    )
+    assert settings.turnstile_enabled is True

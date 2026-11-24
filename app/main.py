@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -27,9 +28,12 @@ from app.api.errors import (
 from app.api.middleware import request_context_middleware
 from app.api.public.chat import router as chat_router
 from app.api.public.health import router as health_router
+from app.chat.cache import AnswerCache
+from app.chat.limits import SlidingWindowLimiter
+from app.chat.quota import QuotaManager, QuotaRecord
 from app.config import Settings, get_settings
 from app.content.snapshot import load_active_snapshot
-from app.db.models import IngestionRun
+from app.db.models import IngestionRun, LLMCall
 from app.db.session import create_database_engine, create_session_factory
 from app.obs.instrumentation import instrument_application
 from app.obs.logging import configure_logging, get_logger
@@ -69,6 +73,35 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         session,
                         app_settings,
                     )
+                    try:
+                        quota_rows = await session.scalars(
+                            select(LLMCall)
+                            .where(LLMCall.started_at >= datetime.now(UTC) - timedelta(days=1))
+                            .order_by(LLMCall.started_at)
+                            .limit(10_000)
+                        )
+                        application.state.quota_manager.rebuild(
+                            (
+                                QuotaRecord(
+                                    model_id=row.model,
+                                    started_at=row.started_at,
+                                    status=row.status,
+                                    tokens_in=row.tokens_in,
+                                    tokens_out=row.tokens_out,
+                                    estimated_input_tokens=row.est_tokens_in,
+                                    reserved_output_tokens=row.reserved_out,
+                                )
+                                for row in quota_rows
+                            ),
+                            breaker_failures=app_settings.breaker_failures,
+                            breaker_open_seconds=app_settings.breaker_min_open_s,
+                        )
+                    except SQLAlchemyError as exc:
+                        await session.rollback()
+                        get_logger("chat.quota", app_settings).warning(
+                            "quota_history_restore_failed",
+                            error_type=type(exc).__name__,
+                        )
             except ValueError as exc:
                 application.state.snapshot_error = "release_validation_failed"
                 get_logger("content.snapshot", app_settings).error(
@@ -86,6 +119,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
+            providers = getattr(application.state, "chat_providers", None) or {}
+            for provider in providers.values():
+                close = getattr(provider, "close", None)
+                if close is not None:
+                    await close()
             embedding_client = getattr(application.state, "embedding_client", None)
             if embedding_client is not None:
                 await embedding_client.close()
@@ -107,6 +145,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.session_factory = session_factory
     application.state.telemetry_writer = writer
     application.state.embedding_client = None
+    application.state.chat_providers = None
+    application.state.quota_manager = QuotaManager()
+    application.state.answer_cache = AnswerCache()
+    application.state.session_rate_limiter = SlidingWindowLimiter()
+    application.state.chat_rate_limiter = SlidingWindowLimiter()
+    application.state.turnstile_fail_open_limiter = SlidingWindowLimiter()
+    application.state.active_sessions = set()
+    application.state.query_embedding_cache = {}
     application.state.active_snapshot = None
     application.state.snapshot_error = None
     application.middleware("http")(request_context_middleware(app_settings))

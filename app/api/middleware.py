@@ -49,8 +49,18 @@ def request_context_middleware(
                     request.app.state, "telemetry_writer", None
                 )
                 if writer is not None:
+                    trace_record = make_trace_record(
+                        trace_id,
+                        started_at,
+                        elapsed_ms,
+                        status_code,
+                        route,
+                    )
+                    session_id = getattr(request.state, "session_id", None)
+                    if session_id is not None:
+                        trace_record["session_id"] = session_id
                     await writer.enqueue(
-                        make_trace_record(trace_id, started_at, elapsed_ms, status_code, route),
+                        trace_record,
                         make_span_record(
                             trace_id,
                             span_id,

@@ -71,12 +71,16 @@ class Settings(BaseSettings):
     session_ttl_minutes: int = 30
     session_max_hours: int = 4
     session_cache_seconds: int = 300
+    session_rate_limit_per_minute: int = 10
+    chat_rate_limit_per_minute: int = 30
     turnstile_enabled: bool = False
     turnstile_secret: SecretStr | None = None
+    turnstile_fail_open_per_minute: int = 1
     rollout_percent: int = 0
     kill_switch: bool = False
     maintenance_message: str = "ZIT assistant is temporarily unavailable."
     fast_greeting: bool = True
+    fast_thanks_bye: bool = True
     fast_contact: bool = True
     fast_apply: bool = True
     fast_field: bool = True
@@ -123,6 +127,31 @@ class Settings(BaseSettings):
             raise ValueError("CHUNK_HARD_MAX_TOKENS must be positive")
         if self.trusted_proxy_hops < 0:
             raise ValueError("TRUSTED_PROXY_HOPS cannot be negative")
+        if (
+            min(
+                self.session_ttl_minutes,
+                self.session_max_hours,
+                self.session_rate_limit_per_minute,
+                self.chat_rate_limit_per_minute,
+                self.turnstile_fail_open_per_minute,
+            )
+            < 1
+        ):
+            raise ValueError("Session and chat limits must be positive")
+        if not 0 <= self.rollout_percent <= 100:
+            raise ValueError("ROLLOUT_PERCENT must be between 0 and 100")
+        if (
+            min(
+                self.session_cache_seconds,
+                self.message_max_chars,
+                self.breaker_failures,
+            )
+            < 1
+            or self.sse_ping_seconds <= 0
+        ):
+            raise ValueError("Chat timeouts, cache, message, and breaker limits must be positive")
+        if self.turnstile_enabled and not self._has_value(self.turnstile_secret):
+            raise ValueError("TURNSTILE_SECRET is required when TURNSTILE_ENABLED is true")
 
     def _validate_admin_docs_settings(self) -> None:
         docs_username_set = self._has_value(self.admin_docs_username)

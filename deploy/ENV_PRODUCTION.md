@@ -10,6 +10,10 @@ Never put real secrets in this file or in Git. Copy names into the host's secret
 | `DATABASE_SSL_ROOT_CERT` | Optional | CA certificate path | Supabase dashboard |
 | `DB_POOL_SIZE` | Yes | Positive integer, default `8` | Host setting |
 | `SESSION_PEPPER` | Yes | 32 or more random bytes | Generate locally |
+| `SESSION_TTL_MINUTES` | Yes | `30` | Fixed |
+| `SESSION_MAX_HOURS` | Yes | `4` | Fixed |
+| `SESSION_RATE_LIMIT_PER_MINUTE` | Yes | `10` | Fixed |
+| `CHAT_RATE_LIMIT_PER_MINUTE` | Yes | `30` | Fixed |
 | `ADMIN_BOOTSTRAP_KEY_HASH` | Yes | SHA-256 hash | Run `python -m app.security.keys generate` |
 | `ADMIN_DOCS_USERNAME` | Optional | Username | Owner decision |
 | `ADMIN_DOCS_PASSWORD` | Optional | Long password | Owner decision |
@@ -23,6 +27,9 @@ Never put real secrets in this file or in Git. Copy names into the host's secret
 | `LLM_MODELS` | Yes | JSON model configuration | Copy approved file content |
 | `ROLLOUT_PERCENT` | Yes | `0` for staff-only start | Fixed |
 | `KILL_SWITCH` | Yes | `false` | Fixed |
+| `TURNSTILE_ENABLED` | Yes | `false` until the widget site key is configured | Owner decision |
+| `TURNSTILE_SECRET` | Optional | Private Turnstile secret | Cloudflare |
+| `TURNSTILE_FAIL_OPEN_PER_MINUTE` | Yes | `1` | Fixed |
 | `MAINTENANCE_MESSAGE` | Yes | Short safe text | Fixed |
 | `WIDGET_ORIGINS` | Yes | Exact Vercel origin | Vercel deployment |
 | `FRAME_ANCESTORS` | Yes | Exact ZIT website origins | Web team |
@@ -31,7 +38,6 @@ Never put real secrets in this file or in Git. Copy names into the host's secret
 | `VITE_TURNSTILE_SITE_KEY` | Optional | Public Turnstile site key | Cloudflare |
 | `VITE_PARENT_ORIGINS` | Yes | Exact ZIT website origins | Web team |
 | `VITE_PRIVACY_URL` | Optional | Public privacy URL | Owner |
-| `TURNSTILE_SECRET` | Optional | Private Turnstile secret | Cloudflare |
 | `SENTRY_DSN` | Optional | DSN or `placeholder` | Sentry project |
 
 Generate `SESSION_PEPPER` with:
