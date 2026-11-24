@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI
@@ -39,6 +40,7 @@ from app.obs.instrumentation import instrument_application
 from app.obs.logging import configure_logging, get_logger
 from app.obs.sentry import initialize_sentry
 from app.obs.writer import TelemetryWriter
+from app.ops import run_nightly_retention
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -60,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
+        retention_task: asyncio.Task[None] | None = None
         if session_factory is not None:
             try:
                 async with session_factory() as session:
@@ -116,9 +119,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 )
         if writer is not None:
             writer.start()
+        if session_factory is not None:
+            retention_task = asyncio.create_task(
+                run_nightly_retention(session_factory),
+                name="nightly-retention",
+            )
         try:
             yield
         finally:
+            if retention_task is not None:
+                retention_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await retention_task
             providers = getattr(application.state, "chat_providers", None) or {}
             for provider in providers.values():
                 close = getattr(provider, "close", None)

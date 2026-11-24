@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import os
+import time
 from collections.abc import Awaitable, Callable
 from uuid import UUID, uuid4
 
@@ -12,31 +12,21 @@ from app.db.session import create_database_engine, create_session_factory
 from app.main import create_app
 from app.security.keys import AdminScope, generate_admin_key, hash_admin_key
 from fastapi.testclient import TestClient
-from pydantic import SecretStr
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("PHASE1_TEST_DATABASE_URL"),
-    reason="set PHASE1_TEST_DATABASE_URL to run PostgreSQL integration tests",
-)
 
 
 def test_admin_key_changes_are_audited_and_secrets_are_not_listed() -> None:
     base_settings = get_settings()
     if base_settings.env == "prod":
         pytest.fail("Admin integration tests must not run with ENV=prod")
+    if base_settings.database_url is None:
+        pytest.fail("DATABASE_URL is required for shared-database integration tests")
 
-    database_url = os.environ["PHASE1_TEST_DATABASE_URL"]
-    settings = base_settings.model_copy(
-        update={
-            "database_url": SecretStr(database_url),
-            "database_url_direct": SecretStr(database_url),
-        }
-    )
+    settings = base_settings.model_copy(update={"writer_flush_seconds": 0.01})
     run_id = uuid4().hex
-    owner_name = f"phase1-test-owner-{run_id}"
-    created_name = f"phase1-test-created-{run_id}"
+    owner_name = f"zzdrill-agent-drill-temp-{run_id}"
+    created_name = f"zzdrill-admin-created-{run_id}"
     owner_key, owner_hash = generate_admin_key()
     request_ids: set[UUID] = set()
 
@@ -71,6 +61,23 @@ def test_admin_key_changes_are_audited_and_secrets_are_not_listed() -> None:
             assert list_response.status_code == 200
             assert created_key not in list_response.text
 
+            broken_responses = (
+                client.get(f"/zzdrill-missing-{run_id}"),
+                client.get(
+                    "/admin/v1/traces/not-a-uuid",
+                    headers={"Authorization": f"Bearer {owner_key}"},
+                ),
+            )
+            for response in broken_responses:
+                request_ids.add(UUID(response.headers["X-Request-ID"]))
+                assert response.status_code in {404, 422}
+
+            for response in broken_responses:
+                trace_id = UUID(response.headers["X-Request-ID"])
+                trace_detail = _lookup_trace(client, owner_key, trace_id, request_ids)
+                assert trace_detail["trace"]["status"] == "error"
+                assert trace_detail["spans"]
+
             revoke_response = client.delete(
                 f"/admin/v1/api-keys/{created_key_id}",
                 headers={"Authorization": f"Bearer {owner_key}"},
@@ -103,6 +110,11 @@ def test_admin_key_changes_are_audited_and_secrets_are_not_listed() -> None:
             assert created_key not in str(audit_rows)
 
         async def verify_records(session: AsyncSession) -> None:
+            traces = (
+                await session.scalars(select(Trace).where(Trace.trace_id.in_(request_ids)))
+            ).all()
+            for trace in traces:
+                trace.flags = ["zzdrill-admin-drill"]
             key = await session.scalar(select(ApiKey).where(ApiKey.name == created_name))
             assert key is not None
             assert key.key_hash == hash_admin_key(created_key)
@@ -122,6 +134,26 @@ def test_admin_key_changes_are_audited_and_secrets_are_not_listed() -> None:
         _run_database_operation(settings, verify_records)
     finally:
         _cleanup_test_rows(settings, {owner_name, created_name}, request_ids)
+
+
+def _lookup_trace(
+    client: TestClient,
+    owner_key: str,
+    trace_id: UUID,
+    request_ids: set[UUID],
+) -> dict[str, object]:
+    for _ in range(40):
+        response = client.get(
+            f"/admin/v1/traces/{trace_id}",
+            headers={"Authorization": f"Bearer {owner_key}"},
+        )
+        request_ids.add(UUID(response.headers["X-Request-ID"]))
+        if response.status_code == 200:
+            return response.json()
+        if response.status_code != 404:
+            pytest.fail(f"Trace lookup failed with status {response.status_code}")
+        time.sleep(0.05)
+    pytest.fail("Trace was not persisted before the drill deadline")
 
 
 def _run_database_operation(
@@ -155,7 +187,6 @@ def _cleanup_test_rows(settings: Settings, names: set[str], trace_ids: set[UUID]
                     )
                     await session.execute(delete(Span).where(Span.trace_id.in_(trace_ids)))
                     await session.execute(delete(Trace).where(Trace.trace_id.in_(trace_ids)))
-                await session.execute(delete(AuditLog).where(AuditLog.target.in_(names)))
                 await session.execute(delete(ApiKey).where(ApiKey.name.in_(names)))
         finally:
             await engine.dispose()
