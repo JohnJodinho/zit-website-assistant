@@ -49,12 +49,16 @@ def _response(request: httpx.Request, payload: object, status_code: int = 200) -
     )
 
 
-async def test_client_discovers_service_limits_and_splits_batches() -> None:
+async def test_client_discovers_service_limits_and_splits_batches(monkeypatch) -> None:
     requests: list[tuple[str, dict[str, object] | None]] = []
     sleeps: list[float] = []
+    now = [0.0]
 
     async def no_wait(seconds: float) -> None:
         sleeps.append(seconds)
+        now[0] += seconds
+
+    monkeypatch.setattr("app.embeddings.client.monotonic", lambda: now[0])
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/health/ready":
@@ -135,12 +139,16 @@ async def test_client_rejects_boolean_vector_values() -> None:
             await client.embed_texts(["A public fact"], input_type="document")
 
 
-async def test_client_retries_transient_service_errors_with_retry_after() -> None:
+async def test_client_retries_transient_service_errors_with_retry_after(monkeypatch) -> None:
     attempts = 0
     sleeps: list[float] = []
+    now = [0.0]
 
     async def no_wait(seconds: float) -> None:
         sleeps.append(seconds)
+        now[0] += seconds
+
+    monkeypatch.setattr("app.embeddings.client.monotonic", lambda: now[0])
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal attempts
