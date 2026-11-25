@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./components.css";
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--blue);
+  --color-accent-hover: var(--blue-hover);
+  --color-accent-light: var(--blue-light);
+  --color-divider: var(--line);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --radius-card: var(--radius-card);
+  --radius-control: var(--radius-small);
+  --radius-pill: var(--radius-pill);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-accent: var(--shadow-accent);
+  --duration-fast: var(--motion-fast);
+  --duration-base: var(--motion-base);
+  --duration-slow: var(--motion-slow);
+  --ease-standard: var(--ease-standard);
+}
+
