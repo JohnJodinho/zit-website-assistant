@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from uuid import UUID
 
 from fastapi import Request
@@ -16,11 +17,14 @@ def error_response(
     status_code: int,
     code: str,
     message: str,
+    headers: Mapping[str, str] | None = None,
 ) -> JSONResponse:
     request_id = _request_id(request)
+    response_headers = dict(headers or {})
+    response_headers["X-Request-ID"] = request_id
     return JSONResponse(
         status_code=status_code,
-        headers={"X-Request-ID": request_id},
+        headers=response_headers,
         content={"error": {"code": code, "message": message, "trace_id": request_id}},
     )
 
@@ -30,7 +34,7 @@ async def handle_http_error(request: Request, exc: Exception) -> JSONResponse:
         return error_response(request, 500, "internal_error", "An unexpected error occurred")
     detail = exc.detail if isinstance(exc.detail, str) else "Request failed"
     code = detail if detail.replace("_", "").isalnum() else "request_error"
-    return error_response(request, exc.status_code, code, detail)
+    return error_response(request, exc.status_code, code, detail, headers=exc.headers)
 
 
 async def handle_validation_error(

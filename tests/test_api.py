@@ -59,7 +59,11 @@ def test_admin_docs_require_http_basic_credentials() -> None:
     with TestClient(create_app(settings)) as client:
         response = client.get("/admin/docs")
         assert response.status_code == 401, response.text
-        assert client.get("/admin/openapi.json").status_code == 401
+        assert response.headers["WWW-Authenticate"] == "Basic"
+
+        schema_response = client.get("/admin/openapi.json")
+        assert schema_response.status_code == 401
+        assert schema_response.headers["WWW-Authenticate"] == "Basic"
 
         response = client.get("/admin/docs", auth=("owner", "private"))
         assert response.status_code == 200
