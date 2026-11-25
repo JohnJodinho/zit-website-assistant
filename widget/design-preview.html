@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>ZIT Assistant — Design Preview</title>
+    <style>
+      :root {
+        --blue: #039fe0;
+        --blue-dark: #0286bd;
+        --blue-light: #4cc3f2;
+        --navy: #0a2d4a;
+        --navy-soft: #0d5b88;
+        --deep: #0b1622;
+        --surface: #0e1c2b;
+        --soft: #102131;
+        --text: #e9f1f8;
+        --muted: #a9b7c4;
+        --line: #1f3347;
+        --head: "Nunito Sans", system-ui, "Segoe UI", sans-serif;
+        --body: Roboto, system-ui, "Segoe UI", sans-serif;
+        --pill: 999px;
+      }
+
+      * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
+      body {
+        min-width: 320px;
+        margin: 0;
+        background: radial-gradient(ellipse at 12% 0%, #d9f3ff 0, transparent 38rem), #f1f8fd;
+        color: #1b1d3b;
+        font: 400 16px/1.5 var(--body);
+      }
+      button { color: inherit; font: inherit; }
+      button:focus-visible { outline: 3px solid var(--blue-light); outline-offset: 3px; }
+      .review { width: min(1120px, 100%); margin: 0 auto; padding: 28px 20px 40px; }
+      .intro {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--blue-dark);
+        font: 800 12px/1.2 var(--head);
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+      h1 { margin: 0; color: var(--navy); font: 800 clamp(26px, 4vw, 38px)/1.1 var(--head); }
+      .subhead { max-width: 520px; margin: 8px 0 0; color: #5b6070; }
+      .state-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid #e3eaf0;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(10,45,74,.08);
+      }
+      .state-picker button {
+        min-height: 40px;
+        padding: 8px 14px;
+        border: 1px solid #e3eaf0;
+        border-radius: var(--pill);
+        background: #fff;
+        color: var(--navy);
+        cursor: pointer;
+        font: 700 13px/1.2 var(--head);
+      }
+      .state-picker button[aria-pressed="true"] { border-color: var(--blue); background: var(--blue); color: #fff; }
+      .devices { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr); gap: 20px; }
+      .device {
+        min-width: 0;
+        margin: 0;
+        padding: 14px;
+        border: 1px solid #dce8f0;
+        border-radius: 24px;
+        background: rgba(255,255,255,.8);
+        box-shadow: 0 14px 34px rgba(10,45,74,.1);
+      }
+      .device figcaption { margin: 0 0 10px 4px; color: var(--navy); font: 800 13px var(--head); letter-spacing: .06em; text-transform: uppercase; }
+      .screen {
+        position: relative;
+        height: 650px;
+        overflow: hidden;
+        border: 1px solid #cbdbe6;
+        border-radius: 18px;
+        background: #fff;
+      }
+      .site-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 62px;
+        padding: 10px 16px;
+        border-bottom: 1px solid #e3eaf0;
+        color: #1b1d3b;
+        font: 800 12px var(--head);
+      }
+      .site-brand { display: flex; align-items: center; gap: 8px; }
+      .site-links { color: #5b6070; font: 600 10px var(--body); }
+      .hero {
+        min-height: 290px;
+        margin: 12px;
+        padding: 38px 28px;
+        overflow: hidden;
+        border-radius: 26px;
+        background: linear-gradient(120deg, var(--navy), var(--navy-soft) 60%, var(--blue));
+        color: #fff;
+      }
+      .hero small { color: #cdeeff; font: 800 10px var(--head); letter-spacing: .14em; }
+      .hero h2 { max-width: 260px; margin: 14px 0 8px; font: 800 28px/1.12 var(--head); }
+      .hero p { max-width: 260px; margin: 0; color: #d8ebf7; font-size: 13px; }
+      .page-card {
+        height: 112px;
+        margin: 14px 12px;
+        padding: 16px;
+        border: 1px solid #e3eaf0;
+        border-radius: 20px;
+        background: #fff;
+        color: #5b6070;
+        font-size: 12px;
+      }
+      .page-card strong { display: block; margin-bottom: 8px; color: #1b1d3b; font: 800 15px var(--head); }
+      .chat-slot {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: end;
+        justify-content: end;
+        padding: 12px;
+        pointer-events: none;
+      }
+      .chat {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        width: min(390px, 100%);
+        height: min(590px, 100%);
+        overflow: hidden;
+        border: 1px solid rgba(76,195,242,.28);
+        border-radius: 26px;
+        background: var(--deep);
+        box-shadow: 0 18px 40px rgba(0,0,0,.35);
+        color: var(--text);
+        pointer-events: auto;
+      }
+      .chat-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 64px;
+        padding: 10px 12px;
+        background: linear-gradient(120deg, var(--navy), var(--navy-soft) 65%, #0879ad);
+      }
+      .mark {
+        display: grid;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 14px;
+        background: rgba(3,159,224,.24);
+        color: #fff;
+        font: 900 18px var(--head);
+      }
+      .identity { display: grid; flex: 1; gap: 2px; min-width: 0; }
+      .identity strong { font: 800 15px var(--head); }
+      .identity span { color: #cdeeff; font-size: 11px; }
+      .head-actions { display: flex; gap: 2px; }
+      .head-actions button {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        font-size: 18px;
+      }
+      .head-actions button:hover { background: rgba(255,255,255,.12); }
+      .notice {
+        display: flex;
+        align-items: start;
+        gap: 8px;
+        margin: 10px 12px 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--soft);
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .notice b { color: var(--blue-light); }
+      .transcript { min-height: 0; overflow: auto; padding: 14px 12px; }
+      .welcome { padding: 18px 6px 6px; }
+      .welcome h2 { margin: 0 0 8px; color: var(--text); font: 800 22px/1.2 var(--head); }
+      .welcome p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+      .chips { display: grid; gap: 8px; }
+      .chip {
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--pill);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 11px;
+      }
+      .message {
+        width: fit-content;
+        max-width: 90%;
+        margin: 8px 0;
+        padding: 10px 12px;
+        border-radius: 16px;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+      }
+      .user { margin-left: auto; background: linear-gradient(120deg, var(--blue-dark), var(--blue)); color: #fff; }
+      .assistant { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+      .assistant p { margin: 0 0 8px; }
+      .assistant p:last-child { margin-bottom: 0; }
+      .typing { display: inline-flex; gap: 4px; margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: var(--surface); }
+      .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--blue-light); }
+      .caret { display: inline-block; width: 2px; height: 14px; margin-left: 2px; vertical-align: -2px; background: var(--blue-light); }
+      .link-row, .feedback { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+      .link-pill, .feedback span {
+        padding: 7px 10px;
+        border: 1px solid rgba(76,195,242,.45);
+        border-radius: var(--pill);
+        color: #b6eaff;
+        font: 700 10px var(--head);
+      }
+      .feedback span { border-color: var(--line); color: var(--muted); }
+      .alert {
+        margin-top: 10px;
+        padding: 11px;
+        border: 1px solid rgba(255,138,128,.38);
+        border-radius: 14px;
+        background: rgba(255,138,128,.08);
+        color: var(--text);
+        font-size: 11px;
+      }
+      .alert strong { display: block; margin-bottom: 4px; font: 800 12px var(--head); }
+      .reference { margin-top: 7px; color: var(--muted); font-size: 9px; }
+      .retry { margin-top: 8px; padding: 7px 11px; border: 0; border-radius: var(--pill); background: var(--blue); color: #fff; font: 800 10px var(--head); }
+      .limited { border-color: rgba(76,195,242,.32); background: rgba(3,159,224,.08); }
+      .composer { padding: 10px 12px 12px; border-top: 1px solid var(--line); background: var(--deep); }
+      .input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 4px 5px 4px 12px;
+        border: 1px solid #294258;
+        border-radius: var(--pill);
+        background: var(--surface);
+      }
+      .placeholder { flex: 1; color: #8296a7; font-size: 12px; }
+      .send {
+        display: grid;
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 16px;
+      }
+      .send:disabled { background: #294258; color: #8296a7; }
+      .composer small { display: block; margin-top: 8px; color: #8296a7; font-size: 9px; text-align: center; }
+      .phone .chat-slot { padding: 0; }
+      .phone .chat { width: 100%; height: 100%; border: 0; border-radius: 20px; }
+      .phone .composer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+      .hint { margin: 14px 2px 0; color: #5b6070; font-size: 12px; }
+      @media (max-width: 760px) {
+        .review { padding: 20px 12px 28px; }
+        .devices { grid-template-columns: 1fr; }
+        .desktop .screen { height: 620px; }
+        .phone { width: min(100%, 380px); justify-self: center; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="review">
+      <header class="intro">
+        <div>
+          <p class="eyebrow">Zibeh Institute of Technology</p>
+          <h1>Assistant design preview</h1>
+          <p class="subhead">A quiet, friendly chat panel for questions about courses, fees, and applying. Choose a sample state below.</p>
+        </div>
+        <nav class="state-picker" aria-label="Preview states">
+          <button type="button" data-state="welcome" aria-pressed="true">Welcome</button>
+          <button type="button" data-state="conversation" aria-pressed="false">Conversation</button>
+          <button type="button" data-state="streaming" aria-pressed="false">Streaming</button>
+          <button type="button" data-state="error" aria-pressed="false">Error</button>
+          <button type="button" data-state="limited" aria-pressed="false">Rate limited</button>
+        </nav>
+      </header>
+
+      <section class="devices" aria-label="Phone and desktop previews">
+        <figure class="device desktop">
+          <figcaption>Desktop panel</figcaption>
+          <div class="screen">
+            <header class="site-head">
+              <span class="site-brand"><span class="mark">Z</span> ZIBEH</span>
+              <span class="site-links">COURSES　 PROGRAMMES　 CONTACT</span>
+            </header>
+            <section class="hero">
+              <small>LEARN. BUILD. GROW.</small>
+              <h2>Technology skills for tomorrow</h2>
+              <p>Explore practical courses and programmes at ZIT.</p>
+            </section>
+            <div class="page-card"><strong>Find your next step</strong>Browse courses, learn about fees, or ask how to apply.</div>
+            <div class="chat-slot" data-slot></div>
+          </div>
+        </figure>
+
+        <figure class="device phone">
+          <figcaption>Phone sheet</figcaption>
+          <div class="screen">
+            <header class="site-head">
+              <span class="site-brand"><span class="mark">Z</span> ZIBEH</span>
+              <span class="site-links">MENU</span>
+            </header>
+            <div class="chat-slot" data-slot></div>
+          </div>
+        </figure>
+      </section>
+      <p class="hint">All content is fictional. This page does not contact the backend or load external resources.</p>
+    </main>
+
+    <template id="chat-template">
+      <section class="chat" data-chat>
+        <header class="chat-head">
+          <span class="mark" aria-hidden="true">Z</span>
+          <span class="identity"><strong>ZIT Assistant</strong><span>Online</span></span>
+          <span class="head-actions">
+            <button type="button" aria-label="New chat">+</button>
+            <button type="button" aria-label="Minimize">−</button>
+            <button type="button" aria-label="Close">×</button>
+          </span>
+        </header>
+        <aside class="notice" data-notice><b>i</b><span>Do not enter personal or confidential information.</span></aside>
+        <div class="transcript">
+          <section data-view="welcome">
+            <div class="welcome">
+              <h2>Hello!</h2>
+              <p>I can help with courses, fees, applications, and more.</p>
+              <div class="chips">
+                <div class="chip">Which courses do you offer?</div>
+                <div class="chip">How do I apply?</div>
+                <div class="chip">What are the fees for a course?</div>
+                <div class="chip">Tell me about your programmes</div>
+                <div class="chip">How can I contact ZIT?</div>
+              </div>
+            </div>
+          </section>
+          <section data-view="conversation" hidden>
+            <div class="message user">Which courses do you offer?</div>
+            <div class="message assistant">
+              <p>ZIT offers practical technology courses. I can help you find one that fits.</p>
+              <div class="link-row"><span class="link-pill">View courses ↗</span><span class="link-pill">How to apply ↗</span></div>
+              <div class="feedback"><span>Copy</span><span>Helpful?</span><span>👍</span><span>👎</span></div>
+            </div>
+          </section>
+          <section data-view="streaming" hidden>
+            <div class="message user">How do I apply?</div>
+            <div class="message assistant"><p>Start by choosing the course that interests you. Then complete the application<span class="caret"></span></p></div>
+            <div class="typing" aria-label="Still responding"><i></i><i></i><i></i></div>
+          </section>
+          <section data-view="error" hidden>
+            <div class="message user">Tell me about the application process.</div>
+            <div class="message assistant">Applications begin with selecting a course and...</div>
+            <div class="alert">
+              <strong>This answer may be incomplete.</strong>
+              Please try again, or contact ZIT if the problem continues.
+              <div class="reference">Reference: 00000000-0000-0000-0000-000000000000</div>
+              <button class="retry" type="button">Try again</button>
+            </div>
+          </section>
+          <section data-view="limited" hidden>
+            <div class="alert limited">
+              <strong>Please wait a moment.</strong>
+              There have been several messages recently. You can try again shortly.
+            </div>
+          </section>
+        </div>
+        <form class="composer">
+          <div class="input-row">
+            <span class="placeholder">Write a message...</span>
+            <button class="send" type="button" aria-label="Send message">↑</button>
+          </div>
+          <small>AI can make mistakes. Confirm fees and dates with admissions.</small>
+        </form>
+      </section>
+    </template>
+    <script>
+      const stateButtons = document.querySelectorAll("[data-state]");
+      const template = document.querySelector("#chat-template");
+      document.querySelectorAll("[data-slot]").forEach((slot) => {
+        slot.append(template.content.cloneNode(true));
+      });
+      const chats = document.querySelectorAll("[data-chat]");
+      stateButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const nextState = button.dataset.state;
+          stateButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+          chats.forEach((chat) => {
+            chat.querySelectorAll("[data-view]").forEach((view) => {
+              view.hidden = view.dataset.view !== nextState;
+            });
+            chat.querySelector("[data-notice]").hidden = nextState !== "welcome";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
