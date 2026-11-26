@@ -51,11 +51,14 @@ async def list_llm_calls(
         "items": [
             {
                 "id": row.id,
+                "trace_id": row.trace_id,
                 "model": row.model,
                 "provider": row.provider,
                 "status": row.status,
                 "tokens_in": row.tokens_in,
                 "tokens_out": row.tokens_out,
+                "max_output_tokens": row.max_output_tokens,
+                "finish_reason": row.finish_reason,
             }
             for row in rows
         ]

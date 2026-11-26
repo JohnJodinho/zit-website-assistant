@@ -128,15 +128,15 @@ async def _run_check(
     failure: str | None = None
     rate_limited = False
     try:
-        async for text, event_usage in provider.stream(
+        async for text, update in provider.stream(
             model=model.model_id,
             prompt=_PROMPT,
             max_output_tokens=80,
         ):
             if text:
                 fragments.append(text)
-            if event_usage is not None:
-                usage = event_usage
+            if update is not None and update.usage is not None:
+                usage = update.usage
     except ProviderError as exc:
         failure = exc.error_class
         rate_limited = exc.status_code == 429

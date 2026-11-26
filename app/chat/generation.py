@@ -7,11 +7,11 @@ from datetime import UTC, datetime
 from time import monotonic
 
 from app.chat.models import eligible_models
-from app.chat.providers import ProviderError, StreamingProvider, Usage
+from app.chat.providers import ProviderError, ProviderUpdate, StreamingProvider, Usage
 from app.chat.quota import QuotaManager
 from app.config import Settings
 
-MAX_OUTPUT_TOKENS = 300
+MAX_OUTPUT_TOKENS = 600
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +25,8 @@ class AttemptFailure:
     duration_ms: int
     reserved_tokens: int
     estimated_input_tokens: int
+    max_output_tokens: int
+    finish_reason: str | None
 
 
 @dataclass(slots=True)
@@ -32,9 +34,11 @@ class Generation:
     model_id: str
     provider: str
     tier: int
-    stream: AsyncGenerator[tuple[str, Usage | None], None]
+    stream: AsyncGenerator[tuple[str, ProviderUpdate | None], None]
     first_text: str
     usage: Usage | None
+    finish_reason: str | None
+    max_output_tokens: int
     started_at: datetime
     started_clock: float
     ttfw_ms: int
@@ -72,6 +76,7 @@ async def begin_generation(
         started_at = datetime.now(UTC)
         started_clock = monotonic()
         usage: Usage | None = None
+        finish_reason: str | None = None
         stream = provider.stream(
             model=model.model_id,
             prompt=prompt,
@@ -87,7 +92,10 @@ async def begin_generation(
                     raise TimeoutError("first_token_deadline")
                 text, update = await asyncio.wait_for(anext(stream), timeout=remaining)
                 if update is not None:
-                    usage = update
+                    if update.usage is not None:
+                        usage = update.usage
+                    if update.finish_reason is not None:
+                        finish_reason = update.finish_reason
                 if text:
                     return (
                         Generation(
@@ -97,6 +105,8 @@ async def begin_generation(
                             stream=stream,
                             first_text=text,
                             usage=usage,
+                            finish_reason=finish_reason,
+                            max_output_tokens=MAX_OUTPUT_TOKENS,
                             started_at=started_at,
                             started_clock=started_clock,
                             ttfw_ms=int((monotonic() - started_clock) * 1000),
@@ -139,6 +149,8 @@ async def begin_generation(
                     duration_ms=int((monotonic() - started_clock) * 1000),
                     reserved_tokens=reserved_tokens,
                     estimated_input_tokens=reserved_input,
+                    max_output_tokens=MAX_OUTPUT_TOKENS,
+                    finish_reason=finish_reason,
                 )
             )
             await stream.aclose()

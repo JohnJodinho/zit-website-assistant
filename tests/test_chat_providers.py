@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from app.chat.providers import GeminiProvider, GroqProvider, Usage
+from app.chat.providers import GeminiProvider, GroqProvider, ProviderUpdate, Usage
 
 
 async def test_groq_stream_requests_usage_and_forwards_only_content(monkeypatch) -> None:
@@ -13,7 +13,21 @@ async def test_groq_stream_requests_usage_and_forwards_only_content(monkeypatch)
 
         async def events():
             yield SimpleNamespace(
-                choices=[SimpleNamespace(delta=SimpleNamespace(content="answer"))],
+                choices=[
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content="answer"),
+                        finish_reason=None,
+                    )
+                ],
+                usage=None,
+            )
+            yield SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content=None),
+                        finish_reason="length",
+                    )
+                ],
                 usage=None,
             )
             yield SimpleNamespace(
@@ -31,7 +45,11 @@ async def test_groq_stream_requests_usage_and_forwards_only_content(monkeypatch)
         item async for item in provider.stream(model="model", prompt="prompt", max_output_tokens=20)
     ]
 
-    assert actual == [("answer", None), ("", Usage(12, 4))]
+    assert actual == [
+        ("answer", None),
+        ("", ProviderUpdate(finish_reason="length")),
+        ("", ProviderUpdate(usage=Usage(12, 4))),
+    ]
     assert calls[0]["extra_body"] == {"stream_options": {"include_usage": True}}
 
 
@@ -46,7 +64,8 @@ async def test_gemini_stream_hides_thoughts_and_reports_usage(monkeypatch) -> No
                                 SimpleNamespace(text="private reasoning", thought=True),
                                 SimpleNamespace(text="answer", thought=False),
                             ]
-                        )
+                        ),
+                        finish_reason=SimpleNamespace(name="MAX_TOKENS"),
                     )
                 ],
                 usage_metadata=SimpleNamespace(
@@ -68,4 +87,13 @@ async def test_gemini_stream_hides_thoughts_and_reports_usage(monkeypatch) -> No
         item async for item in provider.stream(model="model", prompt="prompt", max_output_tokens=20)
     ]
 
-    assert actual == [("answer", None), ("", Usage(10, 5))]
+    assert actual == [
+        ("answer", None),
+        (
+            "",
+            ProviderUpdate(
+                usage=Usage(10, 5),
+                finish_reason="MAX_TOKENS",
+            ),
+        ),
+    ]

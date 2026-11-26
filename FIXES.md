@@ -1,0 +1,3 @@
+# Fix log
+
+- 2026-11-26 — Symptom: course answer stopped at 300 output tokens; cause: 300-token cap and discarded provider finish reason. Raised cap to 600, persisted the output limit and finish reason on linked LLM calls, exposed them in trace details, and marked capped streams incomplete. Files: `app/chat/`, `app/db/`, `app/api/admin/`, `tests/`, `scripts/`, `API_CONTRACT.md`, `widget/src/api/sse.test.ts`. Verified: 129 pytest passed (production-database drill skipped), ruff, mypy, Alembic history, and `npm run verify` (28 widget tests). Backend redeploy and migration required; widget redeploy not required.

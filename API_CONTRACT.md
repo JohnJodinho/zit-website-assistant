@@ -72,7 +72,7 @@ Events:
 | `ping` | `{}` | Keep-alive while retrieval or generation is in progress. |
 | `meta` | `{"request_id":"<uuid>","release":2,"path":"...","intent":[],"links":{},"degraded":false}` | Request/retrieval metadata. `release` may be null; `links` maps link keys to `{ "label": "...", "url": "..." }`. A capacity fallback can emit a second `meta` with `path: "capacity"`. |
 | `delta` | `{"t":"answer text"}` | Text to append to the current answer. One or more events may arrive. |
-| `error` | `{"code":"partial_generation_failed"}` | The answer is incomplete. Validation can also emit `{"code":"answer_validation_failed"}`. |
+| `error` | `{"code":"partial_generation_failed"}` | The answer is incomplete. Output-limit truncation uses `generation_truncated`; validation can also emit `{"code":"answer_validation_failed"}`. |
 | `done` | `{"finish":"stop","actions":[],"degraded":false}` | Normal stream end. `degraded` is true for fallback or error cases. |
 
 During retrieval, zero or more `ping` events may arrive before `meta`. Once

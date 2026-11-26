@@ -482,5 +482,7 @@ class LLMCall(Base):
     reasoning_tokens: Mapped[int | None] = mapped_column(Integer)
     est_tokens_in: Mapped[int | None] = mapped_column(Integer)
     reserved_out: Mapped[int | None] = mapped_column(Integer)
+    max_output_tokens: Mapped[int | None] = mapped_column(Integer)
+    finish_reason: Mapped[str | None] = mapped_column(Text)
     remaining: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     retry_after_s: Mapped[int | None] = mapped_column(Integer)

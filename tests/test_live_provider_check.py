@@ -4,13 +4,13 @@ import asyncio
 
 import scripts.live_provider_check as live_check
 from app.chat.models import LLMModel
-from app.chat.providers import ProviderError, Usage
+from app.chat.providers import ProviderError, ProviderUpdate, Usage
 
 
 class FakeProvider:
     def __init__(
         self,
-        events: tuple[tuple[str, Usage | None], ...],
+        events: tuple[tuple[str, ProviderUpdate | None], ...],
         error: ProviderError | None = None,
     ) -> None:
         self.events = events
@@ -55,7 +55,7 @@ def test_live_check_consumes_stream_and_checks_grounding_and_usage(monkeypatch) 
         (
             ("Contact ZIT ", None),
             ("Admissions for current course information.", None),
-            ("", Usage(12, 8)),
+            ("", ProviderUpdate(usage=Usage(12, 8))),
         )
     )
     monkeypatch.setattr(live_check, "_provider", lambda *_: provider)

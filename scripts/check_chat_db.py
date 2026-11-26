@@ -9,7 +9,7 @@ from typing import Any
 from unittest.mock import patch
 from uuid import UUID
 
-from app.chat.providers import ProviderError, Usage
+from app.chat.providers import ProviderError, ProviderUpdate, Usage
 from app.chat.quota import QuotaManager
 from app.chat.retrieval import ChatPlan
 from app.chat.sessions import hash_session_token
@@ -52,14 +52,14 @@ class FakeProvider:
         model: str,
         prompt: str,
         max_output_tokens: int,
-    ) -> AsyncGenerator[tuple[str, Usage | None], None]:
+    ) -> AsyncGenerator[tuple[str, ProviderUpdate | None], None]:
         del model, prompt, max_output_tokens
         if self.fail_next:
             self.fail_next = False
-            yield "", Usage(7, 0)
+            yield "", ProviderUpdate(usage=Usage(7, 0))
             raise ProviderError(_MARKER, 503)
         yield "The retrieved ZIT answer is supported.", None
-        yield "", Usage(14, 5)
+        yield "", ProviderUpdate(usage=Usage(14, 5))
 
 
 async def fake_plan(

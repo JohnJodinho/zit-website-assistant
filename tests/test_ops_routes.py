@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from uuid import UUID
 
 from app.api.admin.ops_routes import SettingPatch, patch_setting
+from app.api.admin.routes import get_trace
 from app.config import Settings
 from app.db.models import AuditLog, Setting
 from app.main import create_app
@@ -87,3 +88,59 @@ def test_setting_patch_is_persisted_and_audited() -> None:
     assert audit.target == "KILL_SWITCH"
     assert audit.trace_id == trace_id
     assert session.committed is True
+
+
+def test_trace_lookup_includes_linked_llm_finish_metadata() -> None:
+    trace_id = UUID(int=9)
+    trace = SimpleNamespace(
+        trace_id=trace_id,
+        kind="chat",
+        started_at=None,
+        duration_ms=100,
+        status="ok",
+        error_code=None,
+        route="/api/v1/chat/stream",
+    )
+    call = SimpleNamespace(
+        id=1,
+        provider="groq",
+        model="model",
+        status="partial",
+        error_class="output_token_limit",
+        tokens_in=100,
+        tokens_out=600,
+        max_output_tokens=600,
+        finish_reason="length",
+    )
+
+    class TraceSession:
+        def __init__(self) -> None:
+            self.results = [[], [call]]
+
+        async def get(self, *_: object) -> SimpleNamespace:
+            return trace
+
+        async def scalars(self, *_: object) -> SimpleNamespace:
+            return SimpleNamespace(all=lambda: self.results.pop(0))
+
+    principal = AdminPrincipal(
+        UUID(int=1),
+        "owner",
+        frozenset({AdminScope.READ.value}),
+    )
+
+    result = asyncio.run(get_trace(trace_id, TraceSession(), principal))
+
+    assert result["llm_calls"] == [
+        {
+            "id": 1,
+            "provider": "groq",
+            "model": "model",
+            "status": "partial",
+            "error_class": "output_token_limit",
+            "tokens_in": 100,
+            "tokens_out": 600,
+            "max_output_tokens": 600,
+            "finish_reason": "length",
+        }
+    ]

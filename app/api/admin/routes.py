@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_scope
-from app.db.models import ApiKey, AuditLog, Span, Trace
+from app.db.models import ApiKey, AuditLog, LLMCall, Span, Trace
 from app.db.session import get_db_session
 from app.security.keys import (
     ALL_ADMIN_SCOPES,
@@ -143,6 +143,11 @@ async def get_trace(
     spans = (
         await session.scalars(select(Span).where(Span.trace_id == trace_id).order_by(Span.id.asc()))
     ).all()
+    llm_calls = (
+        await session.scalars(
+            select(LLMCall).where(LLMCall.trace_id == trace_id).order_by(LLMCall.id.asc())
+        )
+    ).all()
     return {
         "trace": {
             "trace_id": trace.trace_id,
@@ -165,6 +170,20 @@ async def get_trace(
                 "error": span.error,
             }
             for span in spans
+        ],
+        "llm_calls": [
+            {
+                "id": call.id,
+                "provider": call.provider,
+                "model": call.model,
+                "status": call.status,
+                "error_class": call.error_class,
+                "tokens_in": call.tokens_in,
+                "tokens_out": call.tokens_out,
+                "max_output_tokens": call.max_output_tokens,
+                "finish_reason": call.finish_reason,
+            }
+            for call in llm_calls
         ],
     }
 

@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 
 import pytest
 from app.chat.generation import begin_generation
-from app.chat.providers import ProviderError, StreamingProvider, Usage
+from app.chat.providers import ProviderError, ProviderUpdate, StreamingProvider, Usage
 from app.chat.quota import QuotaManager
 from app.config import Settings
 
@@ -16,6 +16,7 @@ class FakeProvider:
         self.failure = failure
         self.calls = 0
         self.prompts: list[str] = []
+        self.output_limits: list[int] = []
 
     async def stream(
         self,
@@ -23,13 +24,14 @@ class FakeProvider:
         model: str,
         prompt: str,
         max_output_tokens: int,
-    ) -> AsyncGenerator[tuple[str, Usage | None], None]:
+    ) -> AsyncGenerator[tuple[str, ProviderUpdate | None], None]:
         self.calls += 1
         self.prompts.append(prompt)
+        self.output_limits.append(max_output_tokens)
         if self.failure:
             raise ProviderError("unavailable", 503)
         yield "answer", None
-        yield "", Usage(10, 4)
+        yield "", ProviderUpdate(usage=Usage(10, 4))
 
 
 def _model(
@@ -77,6 +79,7 @@ async def test_generation_fails_over_before_first_content() -> None:
     assert providers["groq"].calls == 1
     assert providers["gemini"].calls == 1
     assert providers["gemini"].prompts == ["A short prompt"]
+    assert providers["gemini"].output_limits == [600]
 
 
 async def test_generation_never_calls_models_without_both_free_flags() -> None:
@@ -118,7 +121,7 @@ async def test_generation_closes_stream_when_cancelled_before_first_text() -> No
             model: str,
             prompt: str,
             max_output_tokens: int,
-        ) -> AsyncGenerator[tuple[str, Usage | None], None]:
+        ) -> AsyncGenerator[tuple[str, ProviderUpdate | None], None]:
             try:
                 await waiting.wait()
                 yield "unreachable", None

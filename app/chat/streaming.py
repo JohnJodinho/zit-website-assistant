@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.chat.answer import answer_is_grounded
 from app.chat.cache import AnswerCache
 from app.chat.generation import AttemptFailure, Generation, begin_generation
-from app.chat.providers import ProviderError, Usage
+from app.chat.providers import ProviderError, ProviderUpdate, Usage
 from app.chat.quota import QuotaManager
 from app.chat.retrieval import ChatPlan, prepare_chat_plan
 from app.chat.runtime import get_providers
@@ -116,9 +116,12 @@ async def stream_chat(
             if event is None:
                 yield "ping", {}
                 continue
-            part, usage = event
-            if usage is not None:
-                generation.usage = usage
+            part, update = event
+            if update is not None:
+                if update.usage is not None:
+                    generation.usage = update.usage
+                if update.finish_reason is not None:
+                    generation.finish_reason = update.finish_reason
             if not part:
                 continue
             text_buffer += part
@@ -133,9 +136,17 @@ async def stream_chat(
                 yield "delta", {"t": sentence_text}
             if invalid_answer:
                 break
+        output_limited = _output_limit_reached(generation)
         if invalid_answer:
             if emitted:
-                yield "error", {"code": "answer_validation_failed"}
+                yield (
+                    "error",
+                    {
+                        "code": (
+                            "generation_truncated" if output_limited else "answer_validation_failed"
+                        )
+                    },
+                )
                 yield "done", {"finish": "stop", "actions": [], "degraded": True}
             else:
                 yield "delta", {"t": _CAPACITY_ANSWER}
@@ -149,10 +160,20 @@ async def stream_chat(
             elif tail:
                 invalid_answer = True
             if invalid_answer and emitted:
-                yield "error", {"code": "answer_validation_failed"}
+                yield (
+                    "error",
+                    {
+                        "code": (
+                            "generation_truncated" if output_limited else "answer_validation_failed"
+                        )
+                    },
+                )
                 yield "done", {"finish": "stop", "actions": [], "degraded": True}
             elif invalid_answer or not emitted:
                 yield "delta", {"t": _CAPACITY_ANSWER}
+                yield "done", {"finish": "stop", "actions": [], "degraded": True}
+            elif output_limited:
+                yield "error", {"code": "generation_truncated"}
                 yield "done", {"finish": "stop", "actions": [], "degraded": True}
             else:
                 if snapshot is not None:
@@ -165,12 +186,18 @@ async def stream_chat(
                 yield "done", {"finish": "stop", "actions": [], "degraded": False}
         _correct_quota(quota, generation)
         quota.record_success(generation.model_id)
+        if output_limited:
+            status, error_class = "partial", "output_token_limit"
+        elif invalid_answer:
+            status, error_class = "error", "answer_validation_failed"
+        else:
+            status, error_class = "ok", None
         await _record_generation(
             request,
             trace_id,
             generation,
-            "error" if invalid_answer else "ok",
-            "answer_validation_failed" if invalid_answer else None,
+            status,
+            error_class,
         )
     except ClientDisconnected:
         _correct_quota(quota, generation)
@@ -202,7 +229,7 @@ async def stream_chat(
 async def _provider_events(
     request: Request,
     generation: Generation,
-) -> AsyncIterator[tuple[str, Usage | None] | None]:
+) -> AsyncIterator[tuple[str, ProviderUpdate | None] | None]:
     next_ping = monotonic() + request.app.state.settings.sse_ping_seconds
     while True:
         task = asyncio.create_task(anext(generation.stream))
@@ -221,6 +248,17 @@ async def _provider_events(
             yield task.result()
         except StopAsyncIteration:
             return
+
+
+def _output_limit_reached(generation: Generation) -> bool:
+    if generation.finish_reason is not None and generation.finish_reason.casefold() in {
+        "length",
+        "max_tokens",
+    }:
+        return True
+    return (
+        generation.usage is not None and generation.usage.tokens_out >= generation.max_output_tokens
+    )
 
 
 async def _wait_with_pings(
@@ -303,6 +341,8 @@ async def _record_failures(
             None,
             failure.estimated_input_tokens,
             failure.reserved_tokens,
+            failure.max_output_tokens,
+            failure.finish_reason,
         )
         for failure in failures
     ]
@@ -331,6 +371,8 @@ async def _record_generation(
         usage,
         generation.estimated_input_tokens,
         generation.reserved_tokens,
+        generation.max_output_tokens,
+        generation.finish_reason,
     )
     await _persist_llm_calls(request, [record])
 
@@ -349,6 +391,8 @@ def _llm_call(
     usage: Usage | None,
     estimated_input_tokens: int,
     reserved_tokens: int,
+    max_output_tokens: int,
+    finish_reason: str | None,
 ) -> LLMCall:
     return LLMCall(
         trace_id=trace_id,
@@ -365,6 +409,8 @@ def _llm_call(
         tokens_out=usage.tokens_out if usage else None,
         est_tokens_in=estimated_input_tokens,
         reserved_out=max(0, reserved_tokens - estimated_input_tokens),
+        max_output_tokens=max_output_tokens,
+        finish_reason=finish_reason,
     )
 
 

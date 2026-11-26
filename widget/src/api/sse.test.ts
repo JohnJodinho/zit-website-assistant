@@ -37,11 +37,11 @@ describe("readSse", () => {
     expect(result).toEqual({ completed: true, stopped: false, errorCode: null });
   });
 
-  it("marks an error after text as incomplete even if done follows", async () => {
+  it("marks output-limit truncation as incomplete even if done follows", async () => {
     const onEvent = vi.fn<(event: SseEvent) => void>();
     const response = responseFromChunks([
       'event: delta\ndata: {"t":"Partial"}\n\n',
-      'event: error\ndata: {"code":"partial_generation_failed"}\n\n',
+      'event: error\ndata: {"code":"generation_truncated"}\n\n',
       'event: done\ndata: {"finish":"stop","actions":[],"degraded":false}\n\n',
     ]);
 
@@ -49,7 +49,7 @@ describe("readSse", () => {
     expect(result).toEqual({
       completed: true,
       stopped: false,
-      errorCode: "partial_generation_failed",
+      errorCode: "generation_truncated",
     });
   });
 
