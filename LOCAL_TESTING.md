@@ -2,6 +2,10 @@
 
 The widget uses Node 22 and the backend API. The mock backend runs locally and makes no provider calls.
 
+## Test URL parsing without a backend
+
+From `widget/`, run `npm run test:urls`. This isolated test command makes no API or provider calls. It checks bare `https://`, `http://`, and `www.` URLs, shortened link labels, Markdown labels, metadata links, trailing punctuation, and unsafe destinations.
+
 ## Start the playground
 
 1. Open a terminal in `widget/` and run `npm ci`.
