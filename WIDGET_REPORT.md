@@ -8,8 +8,10 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 
 - The parent page now decides whether the widget is in phone or desktop layout. The loader reads that mode from its own responsive CSS and sends it to the iframe. The iframe no longer reports its own resized width back to the loader, which removes the resize feedback loop that caused the large-viewport flicker.
 - The composer uses the parent-provided layout mode for Enter-key behavior, rather than guessing from the compact iframe width.
+- The loader now waits for the iframe's `load` event before sending any messages to it, including viewport updates. On first open, `zit:init` opens the panel; `zit:open` is sent only on later opens. This prevents messages from targeting the configured widget origin while the iframe is still on its inherited-origin blank page.
+- Removed the app's asynchronous automatic focus on the composer. The launcher click focuses the iframe itself, so keyboard focus enters the widget without triggering the browser's `focus-without-user-activation` warning. Visitors can tab to the composer normally.
 - The existing availability behavior is preserved: disabled config means no launcher; a maintenance message with enabled config is shown and sending stays disabled. The backend config must be corrected for normal chat; changing this display rule would conflict with the widget contract.
-- Added focused tests for valid host-mode initialization and for keeping panel mode controlled by the parent viewport.
+- Added focused tests for valid host-mode initialization, keeping panel mode controlled by the parent viewport, and waiting for iframe readiness before messaging it.
 
 ## Verification
 
@@ -18,13 +20,15 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 - strict TypeScript check
 - ESLint and accessibility rules
 - style/layout rules
-- 28 Vitest/jsdom tests
+- 29 Vitest/jsdom tests
 - secret scan
 - production app and loader build
 - gzip budgets
 - mock-code exclusion from `dist/`
 
 Gzip sizes: app JavaScript 93.2 KB / 150 KB; CSS 19.2 KB / 25 KB; loader 3.6 KB / 6 KB. ESLint also printed its existing non-fatal `jsx-ast-utils` MetaProperty notice.
+
+Implementation commit: `fe78421`.
 
 ## Backend notes
 
@@ -35,6 +39,7 @@ Gzip sizes: app JavaScript 93.2 KB / 150 KB; CSS 19.2 KB / 25 KB; loader 3.6 KB 
 - Local CORS preflights for `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:4173`, and `http://127.0.0.1:4173` returned HTTP 400, and the normal responses did not include `Access-Control-Allow-Origin`. Append those four origins to the existing backend `WIDGET_ORIGINS` value, then restart the backend. This is also in `LOCAL_TESTING.md`.
 - No live model/provider request was made to avoid any paid AI call. Real backend chat remains unverified; mocked chat, SSE, session retry, validation errors, URL checks, feedback replacement, and interrupted/error streams are covered by tests.
 - No browser screenshots or browser automation were used. The owner should make the visual check through the playground.
+- No live browser session was available for checking the two reported console messages directly. The first is covered by the new iframe-ready messaging test; the focus warning is prevented by removing the asynchronous textarea focus call. The owner can confirm both in the playground using either `localhost` or `127.0.0.1`.
 
 ## Owner actions
 

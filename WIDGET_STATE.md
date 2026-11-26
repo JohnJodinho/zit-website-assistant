@@ -7,7 +7,9 @@ Done:
 - Built the TypeScript/Tailwind widget, secure loader, playground, dev-only mock API, tests, Vercel config, and handover guides.
 - Fixed the desktop/tablet flicker by making the embedding page's CSS viewport mode authoritative; removed iframe-to-loader mode feedback and passed the host mode to the composer.
 - Added bridge/loader tests for validated host mode and parent-controlled panel mode.
-- `npm run verify` passed: 28 tests, typecheck, lint, style/layout, secret scan, production build, bundle budgets, and mock exclusion.
+- Fixed the `postMessage` origin warning by waiting until the iframe loads before sending messages, including viewport updates; first-open initialization already opens the chat, and later opens use `zit:open`.
+- Removed asynchronous composer autofocus that caused the browser focus-policy warning; the launcher click focuses the iframe, and keyboard navigation proceeds inside the widget.
+- `npm run verify` passed: 29 tests, typecheck, lint, style/layout, secret scan, production build, bundle budgets, and mock exclusion.
 - Production config and health endpoints returned HTTP 200. No paid provider request or browser screenshot was made.
 
 Next:
@@ -17,4 +19,4 @@ Next:
 
 Open: Local CORS currently blocks all four Vite origins; real school domains and the Vercel origin must be supplied by the owner. The admin settings route does not update the app settings used by public config/chat; backend fix is out of widget scope.
 Checks: `npm run verify` passed; the owner performs the visual check.
-Last commit: host-mode stability and availability report.
+Last commit: `fe78421` — widget iframe messaging and focus fix.
