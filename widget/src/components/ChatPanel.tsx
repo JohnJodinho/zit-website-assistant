@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowDown, LoaderCircle, ShieldCheck } from "lucide-react";
-import type { Ref, RefObject } from "react";
+import type { Ref } from "react";
 import type { ApiConfig } from "../api/types";
 import type { LayoutMode } from "../state/bridge";
 import type { ChatMessage } from "../state/types";
@@ -32,7 +32,6 @@ type Props = {
   showJump: boolean;
   turnstileSiteKey: string;
   turnstileResetKey: number;
-  inputRef: RefObject<HTMLTextAreaElement>;
   messageListRef: Ref<HTMLDivElement>;
   announcement: string;
   onClose(): void;
@@ -92,7 +91,6 @@ function renderPanelContent(
       copiedMessageId={props.copiedMessageId}
       disabled={props.disabled}
       draft={props.draft}
-      inputRef={props.inputRef}
       maintenance={maintenance}
       messageHint={props.messageHint}
       messageListRef={props.messageListRef}
@@ -127,7 +125,6 @@ type ActiveProps = {
   copiedMessageId: string | null;
   disabled: boolean;
   draft: string;
-  inputRef: RefObject<HTMLTextAreaElement>;
   maintenance: string;
   messageHint: string;
   messageListRef: Ref<HTMLDivElement>;
@@ -210,7 +207,6 @@ function ActiveConversation(props: ActiveProps) {
       />
       <Composer
         disabled={props.disabled}
-        inputRef={props.inputRef}
         mobile={props.mode === "mobile"}
         messageHint={props.messageHint}
         onChange={props.onDraftChange}

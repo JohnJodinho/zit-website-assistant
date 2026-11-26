@@ -54,6 +54,7 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
   document.body.append(host);
 
   let iframe: HTMLIFrameElement | null = null;
+  let iframeReady = false;
   let teaserTimer = 0;
   let mode = getViewportMode(window, panel);
   panel.dataset.mode = mode;
@@ -67,7 +68,9 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
     if (nextMode === mode) return mode;
     mode = nextMode;
     panel.dataset.mode = mode;
-    iframe?.contentWindow?.postMessage({ type: "zit:host-mode", mode }, widgetOrigin);
+    if (iframeReady) {
+      iframe?.contentWindow?.postMessage({ type: "zit:host-mode", mode }, widgetOrigin);
+    }
     return mode;
   };
 
@@ -94,6 +97,7 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
       iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
       iframe.src = widgetUrl;
       iframe.addEventListener("load", () => {
+        iframeReady = true;
         const mode = updateHostMode();
         iframe?.contentWindow?.postMessage(
           { type: "zit:init", apiUrl: apiOrigin, mode, privacyNotice: config.privacy_notice },
@@ -108,7 +112,9 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
     window.requestAnimationFrame(() => {
       if (!panel.hidden) panel.dataset.open = "true";
     });
-    iframe.contentWindow?.postMessage({ type: "zit:open" }, widgetOrigin);
+    if (iframeReady) {
+      iframe.contentWindow?.postMessage({ type: "zit:open" }, widgetOrigin);
+    }
     iframe.focus();
   };
 

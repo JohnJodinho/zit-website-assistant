@@ -1,6 +1,6 @@
 import { Send, Square } from "lucide-react";
 import { useEffect, useRef } from "react";
-import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import { setComposerHeight } from "../utils/cssVariables";
 
 type Props = {
@@ -10,7 +10,6 @@ type Props = {
   streaming: boolean;
   remainingSeconds: number;
   messageHint: string;
-  inputRef?: RefObject<HTMLTextAreaElement>;
   onChange(value: string): void;
   onSubmit(): void;
   onStop(): void;
@@ -26,10 +25,8 @@ export function Composer({
   onChange,
   onSubmit,
   onStop,
-  inputRef,
 }: Props) {
-  const internalRef = useRef<HTMLTextAreaElement>(null);
-  const textareaRef = inputRef ?? internalRef;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (textareaRef.current) setComposerHeight(textareaRef.current);

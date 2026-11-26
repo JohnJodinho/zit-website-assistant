@@ -81,6 +81,50 @@ describe("installLoader", () => {
     handle?.destroy();
   });
 
+  it("waits for the iframe load before messaging it, then opens it on later visits", async () => {
+    const sameOriginWidgetUrl = `${window.location.origin}/widget`;
+    const handle = await installLoader({
+      document,
+      window,
+      apiUrl,
+      widgetUrl: sameOriginWidgetUrl,
+      position: "right",
+      fetcher: async () => configResponse(),
+    });
+    if (!handle) throw new Error("The loader did not install.");
+
+    handle.launcher.click();
+    const iframe = handle.iframe;
+    if (!iframe) throw new Error("The loader did not create an iframe.");
+    Object.defineProperty(iframe, "contentWindow", { configurable: true, value: window });
+    const postMessage = vi.spyOn(window, "postMessage");
+
+    mobileViewport = true;
+    window.dispatchEvent(new Event("resize"));
+    expect(postMessage).not.toHaveBeenCalled();
+
+    iframe.dispatchEvent(new Event("load"));
+    expect(postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "zit:init", mode: "mobile" }),
+      window.location.origin,
+    );
+
+    mobileViewport = false;
+    window.dispatchEvent(new Event("resize"));
+    window.dispatchEvent(new MessageEvent("message", {
+      data: { type: "zit:close" },
+      origin: window.location.origin,
+      source: iframe.contentWindow,
+    }));
+    handle.launcher.click();
+
+    expect(postMessage).toHaveBeenLastCalledWith(
+      { type: "zit:open" },
+      window.location.origin,
+    );
+    handle.destroy();
+  });
+
   it("ignores messages from an unexpected origin", async () => {
     const handle = await installLoader({
       document,

@@ -54,7 +54,6 @@ export default function App() {
   const turnstileWaiter = useRef<((token: string) => void) | null>(null);
   const abortController = useRef<AbortController | null>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
   const reportedTraceIds = useRef(new Set<string>());
 
   const receiveTurnstileToken = useCallback((token: string): void => {
@@ -153,10 +152,6 @@ export default function App() {
     window.addEventListener("message", handleParentMessage);
     return () => window.removeEventListener("message", handleParentMessage);
   }, []);
-
-  useEffect(() => {
-    if (open) composerRef.current?.focus();
-  }, [open, configLoading]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent): void => {
@@ -409,7 +404,6 @@ export default function App() {
           copiedMessageId={copiedMessageId}
           disabled={disabled}
           draft={draft}
-          inputRef={composerRef}
           messageHint={messageHint}
           messageListRef={messageListRef}
           messages={messages}
