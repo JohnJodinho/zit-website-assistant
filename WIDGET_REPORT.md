@@ -1,5 +1,12 @@
 # Widget Phase B report
 
+## URL rendering follow-up
+
+- Bare `https://`, `http://`, and `www.` URLs in assistant Markdown now become safe clickable links that open in a new tab. Their visible labels omit the URL scheme and a leading `www.`; explicit Markdown labels and API-provided link labels remain unchanged.
+- Unsafe or non-HTTP(S) destinations remain plain text and do not display a misleading external-link icon.
+- Added `npm run test:urls`, an isolated Vitest command that makes no backend or provider calls. Its six tests cover the supported bare URL forms, shortened labels, punctuation, Markdown labels, API metadata links, and unsafe destinations.
+- The focused URL suite passed: 6 tests. The full widget verification passed: 37 tests.
+
 ## What was built
 
 The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shadow DOM loader, playground and development mock backend, responsive chat states, tests, Vercel configuration, and owner handover guides are in place. Backend files and environment values were not changed.
@@ -16,20 +23,20 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 
 ## Verification
 
-`npm run verify` passed after these changes:
+`npm run verify` passed after the URL rendering follow-up:
 
 - strict TypeScript check
 - ESLint and accessibility rules
 - style/layout rules
-- 31 Vitest/jsdom tests
+- 37 Vitest/jsdom tests
 - secret scan
 - production app and loader build
 - gzip budgets
 - mock-code exclusion from `dist/`
 
-Gzip sizes: app JavaScript 93.2 KB / 150 KB; CSS 19.2 KB / 25 KB; loader 3.6 KB / 6 KB. ESLint also printed its existing non-fatal `jsx-ast-utils` MetaProperty notice.
+Gzip sizes: app JavaScript 107.1 KB / 150 KB; CSS 19.2 KB / 25 KB; loader 3.6 KB / 6 KB. ESLint also printed its existing non-fatal `jsx-ast-utils` MetaProperty notice.
 
-Implementation commit: `694ebe9`.
+URL rendering implementation commit: `0db8a9f`. Previous composer fix: `694ebe9`.
 
 ## Backend notes
 
