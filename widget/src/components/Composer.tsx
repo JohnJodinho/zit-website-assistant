@@ -33,13 +33,7 @@ export function Composer({
   }, [textareaRef, value]);
 
   return (
-    <form
-      className="composer"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-    >
+    <div className="composer" role="group" aria-label="Message composer">
       <label className="sr-only" htmlFor="chat-message">Write a message</label>
       <textarea
         autoComplete="off"
@@ -55,6 +49,7 @@ export function Composer({
       {value.length >= 400 && <CharacterCount length={value.length} />}
       <ComposerButton
         disabled={disabled}
+        onSubmit={onSubmit}
         onStop={onStop}
         remainingSeconds={remainingSeconds}
         streaming={streaming}
@@ -64,7 +59,7 @@ export function Composer({
         AI can make mistakes. Confirm fees and dates with admissions.
       </p>
       {messageHint && <p className="composer-hint" role="status">{messageHint}</p>}
-    </form>
+    </div>
   );
 }
 
@@ -93,12 +88,14 @@ function CharacterCount({ length }: { length: number }) {
 
 function ComposerButton({
   disabled,
+  onSubmit,
   onStop,
   remainingSeconds,
   streaming,
   value,
 }: {
   disabled: boolean;
+  onSubmit(): void;
   onStop(): void;
   remainingSeconds: number;
   streaming: boolean;
@@ -109,8 +106,8 @@ function ComposerButton({
       aria-label={streaming ? "Stop response" : "Send message"}
       className="send-button"
       disabled={streaming ? false : disabled || value.trim().length === 0}
-      onClick={streaming ? onStop : undefined}
-      type={streaming ? "button" : "submit"}
+      onClick={streaming ? onStop : onSubmit}
+      type="button"
     >
       {streaming ? (
         <Square aria-hidden="true" size={17} />
