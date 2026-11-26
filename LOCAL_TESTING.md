@@ -44,6 +44,8 @@ http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0
 
 Keep any existing origins in that setting; do not replace them. Restart the backend after changing its environment. This project did not change backend code or environment files.
 
+For a locally available chat, set the backend `.env` values to `ROLLOUT_PERCENT=100`, `KILL_SWITCH=false`, and an empty `MAINTENANCE_MESSAGE`, then restart the backend. A non-empty maintenance message is shown in the widget and disables sending even if `enabled` is true. When `enabled` is false, the loader intentionally shows no launcher, so the maintenance text is not visible.
+
 Sending a question to the real backend may invoke a configured model provider. Use that mode only when the provider is approved and the call is known to be no-cost. The automated checks use mocks and do not send provider requests.
 
 ## Test the production build locally

@@ -2,9 +2,16 @@ import { isHttpUrl, isRecord } from "../api/types";
 
 export type BridgeInit = {
   apiUrl: string;
+  mode: LayoutMode;
   privacyNotice: string;
   parentOrigin: string;
 };
+
+export type LayoutMode = "mobile" | "desktop";
+
+export function isLayoutMode(value: unknown): value is LayoutMode {
+  return value === "mobile" || value === "desktop";
+}
 
 export function connectParent(
   window: Window,
@@ -12,23 +19,42 @@ export function connectParent(
   onInit: (init: BridgeInit) => void,
 ): () => void {
   const handleMessage = (event: MessageEvent<unknown>): void => {
-    if (event.source !== window.parent || !allowedOrigins.includes(event.origin)) return;
-    if (!isRecord(event.data) || event.data.type !== "zit:init") return;
-    if (
-      typeof event.data.apiUrl !== "string" ||
-      !isHttpUrl(event.data.apiUrl) ||
-      (typeof event.data.privacyNotice !== "string" && event.data.privacyNotice !== undefined)
-    ) {
-      return;
-    }
+    if (!isTrustedInitEvent(event, window, allowedOrigins) || !isBridgeInitData(event.data)) return;
     onInit({
       apiUrl: event.data.apiUrl,
+      mode: event.data.mode ?? "desktop",
       privacyNotice: typeof event.data.privacyNotice === "string" ? event.data.privacyNotice : "",
       parentOrigin: event.origin,
     });
   };
   window.addEventListener("message", handleMessage);
   return () => window.removeEventListener("message", handleMessage);
+}
+
+type BridgeInitData = {
+  type: "zit:init";
+  apiUrl: string;
+  mode?: LayoutMode;
+  privacyNotice?: string;
+};
+
+function isTrustedInitEvent(
+  event: MessageEvent<unknown>,
+  window: Window,
+  allowedOrigins: string[],
+): boolean {
+  return event.source === window.parent && allowedOrigins.includes(event.origin);
+}
+
+function isBridgeInitData(value: unknown): value is BridgeInitData {
+  if (!isRecord(value)) return false;
+  return (
+    value.type === "zit:init" &&
+    typeof value.apiUrl === "string" &&
+    isHttpUrl(value.apiUrl) &&
+    (value.mode === undefined || isLayoutMode(value.mode)) &&
+    (typeof value.privacyNotice === "string" || value.privacyNotice === undefined)
+  );
 }
 
 export function sendParentMessage(

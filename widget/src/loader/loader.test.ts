@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installLoader } from "./loader";
 
 const apiUrl = "https://api.example.invalid";
 const widgetUrl = "https://widget.example.invalid";
+const computedStyleDescriptor = Object.getOwnPropertyDescriptor(window, "getComputedStyle");
+let mobileViewport = false;
 
 function configResponse(enabled = true): Response {
   return Response.json({
@@ -17,6 +19,19 @@ describe("installLoader", () => {
   beforeEach(() => {
     document.body.replaceChildren();
     window.sessionStorage.clear();
+    mobileViewport = false;
+    Object.defineProperty(window, "getComputedStyle", {
+      configurable: true,
+      value: () => ({ getPropertyValue: () => mobileViewport ? "mobile" : "desktop" }),
+    });
+  });
+
+  afterEach(() => {
+    if (computedStyleDescriptor) {
+      Object.defineProperty(window, "getComputedStyle", computedStyleDescriptor);
+    } else {
+      Reflect.deleteProperty(window, "getComputedStyle");
+    }
   });
 
   it("shows a launcher in an isolated Shadow DOM and waits to create its iframe", async () => {
@@ -87,6 +102,39 @@ describe("installLoader", () => {
 
     expect(handle?.host.shadowRoot?.querySelector(".frame-shell")?.hasAttribute("hidden")).toBe(false);
     handle?.destroy();
+  });
+
+  it("keeps panel mode tied to the host viewport, not iframe messages", async () => {
+    const handle = await installLoader({
+      document,
+      window,
+      apiUrl,
+      widgetUrl,
+      position: "right",
+      fetcher: async () => configResponse(),
+    });
+    if (!handle) throw new Error("The loader did not install.");
+    handle.launcher.click();
+    const iframe = handle.iframe;
+    if (!iframe) throw new Error("The loader did not create an iframe.");
+    const panel = handle.host.shadowRoot?.querySelector<HTMLDivElement>(".frame-shell");
+    if (!panel) throw new Error("The loader did not create its panel.");
+
+    expect(panel.dataset.mode).toBe("desktop");
+    window.dispatchEvent(new MessageEvent("message", {
+      data: { type: "zit:mode", mode: "mobile" },
+      origin: widgetUrl,
+      source: iframe.contentWindow,
+    }));
+    expect(panel.dataset.mode).toBe("desktop");
+
+    mobileViewport = true;
+    window.dispatchEvent(new Event("resize"));
+    expect(panel.dataset.mode).toBe("mobile");
+    mobileViewport = false;
+    window.dispatchEvent(new Event("resize"));
+    expect(panel.dataset.mode).toBe("desktop");
+    handle.destroy();
   });
 
   it("shows the dismissible teaser once after the delay", async () => {

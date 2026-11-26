@@ -117,6 +117,7 @@
 }
 
 .frame-shell {
+  --host-layout-mode: desktop;
   width: min(var(--panel-width), calc(100vw - 2.5rem));
   height: min(var(--panel-height), calc(100dvh - 2.5rem));
   overflow: hidden;
@@ -164,6 +165,10 @@
 }
 
 @media (max-width: 37.5rem), (max-height: 30rem) {
+  .frame-shell {
+    --host-layout-mode: mobile;
+  }
+
   .launcher {
     width: 3.5rem;
     min-width: 3.5rem;

@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, isHttpUrl, type ApiConfig } from "./api/types";
 import { createApiClient, type ApiClient } from "./api/client";
 import { ChatPanel } from "./components/ChatPanel";
-import { connectParent, parseAllowedOrigins, sendParentMessage } from "./state/bridge";
+import {
+  connectParent,
+  isLayoutMode,
+  parseAllowedOrigins,
+  sendParentMessage,
+  type LayoutMode,
+} from "./state/bridge";
 import { streamWithSession } from "./state/chat";
 import { shouldSubmitRating } from "./state/feedback";
 import { canSendQuestion, recordStreamEvent, updateMessage, type StreamProgress } from "./state/message-stream";
@@ -22,13 +28,12 @@ let messageSequence = 0;
 
 export default function App() {
   const apiRef = useRef<ApiClient | null>(null);
-  const [parentOrigin, setParentOrigin] = useState("");
   const parentOriginRef = useRef("");
   const [config, setConfig] = useState<ApiConfig | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
   const [configFailed, setConfigFailed] = useState(false);
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"mobile" | "desktop">("desktop");
+  const [mode, setMode] = useState<LayoutMode>("desktop");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -88,7 +93,7 @@ export default function App() {
         const client = createApiClient(init.apiUrl);
         apiRef.current = client;
         parentOriginRef.current = init.parentOrigin;
-        setParentOrigin(init.parentOrigin);
+        setMode(init.mode);
         setOpen(true);
         setConfigLoading(true);
         setConfigFailed(false);
@@ -141,6 +146,9 @@ export default function App() {
       if (event.source !== window.parent || event.origin !== parentOriginRef.current) return;
       if (typeof event.data !== "object" || event.data === null || !("type" in event.data)) return;
       if (event.data.type === "zit:open") setOpen(true);
+      if (event.data.type === "zit:host-mode" && "mode" in event.data && isLayoutMode(event.data.mode)) {
+        setMode(event.data.mode);
+      }
     };
     window.addEventListener("message", handleParentMessage);
     return () => window.removeEventListener("message", handleParentMessage);
@@ -157,17 +165,6 @@ export default function App() {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open]);
-
-  useEffect(() => {
-    const reportMode = (): void => {
-      const mode = window.innerWidth <= 600 || window.innerHeight <= 480 ? "mobile" : "desktop";
-      setMode(mode);
-      sendParentMessage(window, parentOrigin, { type: "zit:mode", mode });
-    };
-    reportMode();
-    window.addEventListener("resize", reportMode);
-    return () => window.removeEventListener("resize", reportMode);
-  }, [parentOrigin]);
 
   useEffect(() => {
     const list = messageListRef.current;
@@ -416,6 +413,7 @@ export default function App() {
           messageHint={messageHint}
           messageListRef={messageListRef}
           messages={messages}
+          mode={mode}
           offline={offline}
           onClose={closePanel}
           onCopy={(id) => void copyAnswer(id)}

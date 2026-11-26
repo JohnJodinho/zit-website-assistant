@@ -41,7 +41,7 @@ The widget is a static Vite site. No backend deployment or paid provider call is
 
 7. **Try the deployed playground.** Open `https://your-project.vercel.app/playground.html`, check desktop and phone layouts, and try the launcher, a new chat, links, and feedback. Mock responses are development-only and are not shipped in the production build. Sending real questions may invoke a model provider; only do so if the provider is approved and the call is known to be no-cost.
 
-8. **Roll out safely.** With the script not yet installed on the school site, the backend rollout can be set to 100%. Use the backend rollout percentage or kill switch to control availability. The API contract has no staff-only `?assistant=on` bypass; staged rollout is percentage-based.
+8. **Roll out safely.** The current production config reports `enabled: false` and `rollout_percent: 0`, so the loader correctly shows no launcher. In Render, set `KILL_SWITCH=false` and choose a nonzero `ROLLOUT_PERCENT` when ready; use `100` to include all visitors or a lower value for a staged rollout. Keep `MAINTENANCE_MESSAGE` empty for normal chat: a non-empty message is treated by the widget as maintenance and disables sending. The API contract has no staff-only `?assistant=on` bypass; staged rollout is percentage-based.
 
 9. **Give the web team this script tag after replacing the placeholders:**
 

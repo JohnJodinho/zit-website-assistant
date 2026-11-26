@@ -1,6 +1,7 @@
 import tokens from "../styles/tokens.css?raw";
 import loaderStyles from "./loader.css?raw";
 import { isApiConfig, isHttpUrl, isRecord } from "../api/types";
+import type { LayoutMode } from "../state/bridge";
 
 type LoaderOptions = {
   document: Document;
@@ -54,10 +55,21 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
 
   let iframe: HTMLIFrameElement | null = null;
   let teaserTimer = 0;
+  let mode = getViewportMode(window, panel);
+  panel.dataset.mode = mode;
   const widgetOrigin = new URL(widgetUrl).origin;
   const apiOrigin = new URL(apiUrl).href.replace(/\/+$/, "");
   const dismissed = safeStorageGet(window, storageKeys.teaserDismissed) === "true";
   const wasOpened = safeStorageGet(window, storageKeys.opened) === "true";
+
+  const updateHostMode = (): LayoutMode => {
+    const nextMode = getViewportMode(window, panel);
+    if (nextMode === mode) return mode;
+    mode = nextMode;
+    panel.dataset.mode = mode;
+    iframe?.contentWindow?.postMessage({ type: "zit:host-mode", mode }, widgetOrigin);
+    return mode;
+  };
 
   const closePanel = (): void => {
     delete panel.dataset.open;
@@ -68,10 +80,11 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
   };
 
   const handleMessage = (event: MessageEvent<unknown>): void => {
-    handleLoaderMessage(event, iframe, widgetOrigin, closePanel, launcher, host, panel);
+    handleLoaderMessage(event, iframe, widgetOrigin, closePanel, launcher, host);
   };
 
   const openPanel = (): void => {
+    updateHostMode();
     teaser.hidden = true;
     safeStorageSet(window, storageKeys.opened, "true");
     if (!iframe) {
@@ -81,8 +94,9 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
       iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
       iframe.src = widgetUrl;
       iframe.addEventListener("load", () => {
+        const mode = updateHostMode();
         iframe?.contentWindow?.postMessage(
-          { type: "zit:init", apiUrl: apiOrigin, privacyNotice: config.privacy_notice },
+          { type: "zit:init", apiUrl: apiOrigin, mode, privacyNotice: config.privacy_notice },
           widgetOrigin,
         );
       });
@@ -106,6 +120,7 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
   launcher.addEventListener("click", openPanel);
   teaser.querySelector("button")?.addEventListener("click", dismissTeaser);
   window.addEventListener("message", handleMessage);
+  window.addEventListener("resize", updateHostMode);
 
   if (!dismissed && !wasOpened) {
     teaserTimer = window.setTimeout(() => {
@@ -117,6 +132,7 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
   const handleBeforeUnload = (): void => {
     window.clearTimeout(teaserTimer);
     window.removeEventListener("message", handleMessage);
+    window.removeEventListener("resize", updateHostMode);
   };
   window.addEventListener("beforeunload", handleBeforeUnload, { once: true });
 
@@ -129,10 +145,17 @@ export async function installLoader(options: LoaderOptions): Promise<LoaderHandl
     destroy() {
       window.clearTimeout(teaserTimer);
       window.removeEventListener("message", handleMessage);
+      window.removeEventListener("resize", updateHostMode);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       host.remove();
     },
   };
+}
+
+function getViewportMode(window: Window, panel: HTMLDivElement): LayoutMode {
+  return window.getComputedStyle(panel).getPropertyValue("--host-layout-mode").trim() === "mobile"
+    ? "mobile"
+    : "desktop";
 }
 
 async function getEnabledConfig(
@@ -157,7 +180,6 @@ function handleLoaderMessage(
   closePanel: () => void,
   launcher: HTMLButtonElement,
   host: HTMLElement,
-  panel: HTMLDivElement,
 ): void {
   if (!iframe || event.origin !== widgetOrigin || event.source !== iframe.contentWindow) return;
   if (!isRecord(event.data) || typeof event.data.type !== "string") return;
@@ -170,11 +192,6 @@ function handleLoaderMessage(
   const handler = handlers[event.data.type];
   if (handler) {
     handler();
-    return;
-  }
-  if (event.data.type !== "zit:mode") return;
-  if (event.data.mode === "mobile" || event.data.mode === "desktop") {
-    panel.dataset.mode = event.data.mode;
   }
 }
 

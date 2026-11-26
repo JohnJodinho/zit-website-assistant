@@ -6,6 +6,7 @@ import { setComposerHeight } from "../utils/cssVariables";
 type Props = {
   value: string;
   disabled: boolean;
+  mobile: boolean;
   streaming: boolean;
   remainingSeconds: number;
   messageHint: string;
@@ -18,6 +19,7 @@ type Props = {
 export function Composer({
   value,
   disabled,
+  mobile,
   streaming,
   remainingSeconds,
   messageHint,
@@ -47,7 +49,7 @@ export function Composer({
         id="chat-message"
         maxLength={500}
         onChange={(event) => handleComposerChange(event, onChange)}
-        onKeyDown={(event) => handleComposerKeyDown(event, onSubmit)}
+        onKeyDown={(event) => handleComposerKeyDown(event, onSubmit, mobile)}
         placeholder="Write a message..."
         ref={textareaRef}
         rows={1}
@@ -72,9 +74,9 @@ export function Composer({
 function handleComposerKeyDown(
   event: KeyboardEvent<HTMLTextAreaElement>,
   onSubmit: () => void,
+  mobile: boolean,
 ): void {
-  const phone = window.innerWidth <= 600;
-  if (event.key === "Enter" && !event.shiftKey && !phone) {
+  if (event.key === "Enter" && !event.shiftKey && !mobile) {
     event.preventDefault();
     onSubmit();
   }
