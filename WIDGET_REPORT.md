@@ -10,8 +10,9 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 - The composer uses the parent-provided layout mode for Enter-key behavior, rather than guessing from the compact iframe width.
 - The loader now waits for the iframe's `load` event before sending any messages to it, including viewport updates. On first open, `zit:init` opens the panel; `zit:open` is sent only on later opens. This prevents messages from targeting the configured widget origin while the iframe is still on its inherited-origin blank page.
 - Removed the app's asynchronous automatic focus on the composer. The launcher click focuses the iframe itself, so keyboard focus enters the widget without triggering the browser's `focus-without-user-activation` warning. Visitors can tab to the composer normally.
+- Message sending no longer uses a native HTML form. The iframe sandbox intentionally blocks form navigation, so the composer now sends through an explicit button callback and its existing Enter-key handler instead of relying on native form submission. This is separate from Markdown link rendering: the composer form existed in the original widget build, while links are rendered by a separate component.
 - The existing availability behavior is preserved: disabled config means no launcher; a maintenance message with enabled config is shown and sending stays disabled. The backend config must be corrected for normal chat; changing this display rule would conflict with the widget contract.
-- Added focused tests for valid host-mode initialization, keeping panel mode controlled by the parent viewport, and waiting for iframe readiness before messaging it.
+- Added focused tests for host-controlled layout, iframe-ready messaging, and composer sends without native form submission.
 
 ## Verification
 
@@ -20,7 +21,7 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 - strict TypeScript check
 - ESLint and accessibility rules
 - style/layout rules
-- 29 Vitest/jsdom tests
+- 31 Vitest/jsdom tests
 - secret scan
 - production app and loader build
 - gzip budgets
@@ -28,7 +29,7 @@ The TypeScript/Tailwind chat app, API client and SSE reader, session retry, Shad
 
 Gzip sizes: app JavaScript 93.2 KB / 150 KB; CSS 19.2 KB / 25 KB; loader 3.6 KB / 6 KB. ESLint also printed its existing non-fatal `jsx-ast-utils` MetaProperty notice.
 
-Implementation commit: `fe78421`.
+Implementation commit: `694ebe9`.
 
 ## Backend notes
 

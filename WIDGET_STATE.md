@@ -9,7 +9,8 @@ Done:
 - Added bridge/loader tests for validated host mode and parent-controlled panel mode.
 - Fixed the `postMessage` origin warning by waiting until the iframe loads before sending messages, including viewport updates; first-open initialization already opens the chat, and later opens use `zit:open`.
 - Removed asynchronous composer autofocus that caused the browser focus-policy warning; the launcher click focuses the iframe, and keyboard navigation proceeds inside the widget.
-- `npm run verify` passed: 29 tests, typecheck, lint, style/layout, secret scan, production build, bundle budgets, and mock exclusion.
+- Replaced native composer form submission with explicit button and Enter-key handling. The iframe sandbox still blocks form navigation, and chat messages no longer attempt it.
+- `npm run verify` passed: 31 tests, typecheck, lint, style/layout, secret scan, production build, bundle budgets, and mock exclusion.
 - Production config and health endpoints returned HTTP 200. No paid provider request or browser screenshot was made.
 
 Next:
@@ -19,4 +20,4 @@ Next:
 
 Open: Local CORS currently blocks all four Vite origins; real school domains and the Vercel origin must be supplied by the owner. The admin settings route does not update the app settings used by public config/chat; backend fix is out of widget scope.
 Checks: `npm run verify` passed; the owner performs the visual check.
-Last commit: `fe78421` — widget iframe messaging and focus fix.
+Last commit: `694ebe9` — sandbox-safe composer submission.
